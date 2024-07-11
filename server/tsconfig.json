@@ -1,6 +1,8 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "baseUrl": ".", // Base directory to resolve non-relative module names
     "outDir": "dist", // Redirect output structure to the 'dist' folder
     "rootDir": ".", // Specify the root directory of source files
@@ -8,9 +10,6 @@
     "resolveJsonModule": true,
     "removeComments": true,
     "sourceMap": true,
-    "paths": {
-      "@src/*": ["src/*"] // absolute paths
-    },
     "strictNullChecks": true, // Enable strict null checks
     "strictFunctionTypes": true, // Enable strict checking of function types
     "strictPropertyInitialization": true, // Ensure non-undefined class properties are initialized in the constructor
@@ -24,6 +23,6 @@
     "noImplicitReturns": true, // Report error when not all code paths in function return a value
     "noFallthroughCasesInSwitch": true // Report errors for fallthrough cases in switch statement
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/index.ts", "src/library/logging.ts"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
 }

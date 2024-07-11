@@ -1,4 +1,4 @@
 {
-  "main": "./out/main.js",
+  "main": "./out/index.cjs",
   "output": "./bin/sea-prep.blob"
 }

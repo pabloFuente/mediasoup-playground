@@ -1,5 +1,6 @@
 import express, { Express } from "express";
 import dotenv from "dotenv";
+import { Logger } from "./library/logging.js";
 
 dotenv.config();
 
@@ -12,4 +13,4 @@ app.get("/", (_, res) => {
 
 app.listen(port);
 
-console.log("mediasoup-server listening on port", port);
+Logger.info("mediasoup-server listening on port " + port);
