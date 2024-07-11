@@ -1,4 +1,7 @@
 {
   "main": "./out/index.cjs",
-  "output": "./bin/sea-prep.blob"
+  "output": "./bin/sea-prep.blob",
+  "assets": {
+    "mediasoup-worker": "./node_modules/mediasoup/worker/out/Release/mediasoup-worker"
+  }
 }

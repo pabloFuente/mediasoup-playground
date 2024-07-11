@@ -10,7 +10,8 @@
       "name": "Debug with ts-node",
       "cwd": "${workspaceFolder}/server",
       "runtimeArgs": ["--loader", "ts-node/esm"],
-      "program": "${workspaceFolder}/server/src/index.ts",
+      "args": "${workspaceFolder}/server/src/index.ts",
+      "sourceMaps": true,
       "console": "integratedTerminal",
       "outputCapture": "std"
     }

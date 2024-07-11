@@ -11,8 +11,7 @@ export const Logger = winston.createLogger({
         format.splat(),
         format.errors({ stack: true }),
         format.printf((meta: winston.Logform.TransformableInfo) => {
-          const { level, message, timestamp, stack, ...restMeta } =
-            meta;
+          const { level, message, timestamp, stack, ...restMeta } = meta;
           const stackMessage = stack ? `\n${stack}` : "";
           const otherMetaMessage =
             Object.keys(restMeta).length > 0
