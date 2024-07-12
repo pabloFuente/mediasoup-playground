@@ -1,9 +1,12 @@
 import express, { Express } from "express";
+import { createServer } from "node:http";
+
 import dotenv from "dotenv";
 import { Logger } from "./library/logging.js";
-import mediasoup from "mediasoup";
 import { TransportListenInfo } from "mediasoup/node/lib/types.js";
 import { handleBinary } from "./utils/startup.js";
+import mediasoup from "mediasoup";
+import { GrpcServer } from "./grpc/GrpcServer.js";
 
 dotenv.config();
 handleBinary();
@@ -32,6 +35,11 @@ app.get("/", async (_, res) => {
   res.send();
 });
 
-app.listen(port);
+const httpServer = createServer(app);
 
-Logger.info("mediasoup-server listening on port " + port);
+httpServer.listen(port, () => {
+  Logger.info("mediasoup-server running at http://localhost:" + port);
+});
+
+const server = new GrpcServer();
+server.start();

@@ -14,6 +14,7 @@ export default [
   includeIgnoreFile(gitignorePath), // Ignore linting files declared in .gitignore
   { files: ["**/*.{js,mjs,cjs,ts}"] },
   { languageOptions: { globals: globals.browser } },
+  { ignores: ["src/fbs/*"] },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
 ];

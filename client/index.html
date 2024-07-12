@@ -10,11 +10,11 @@
     <div id="app">
       <h1>Mediasoup Tutorial</h1>
       <div>
-        <input id="room" placeholder="Room" />
+        <input id="room" placeholder="Room" value="TestRoom"/>
         <input id="participant" placeholder="Participant" />
       </div>
       <div>
-        <button onclick="joinRoom()">Join Room</button>
+        <button id="join-btn">Join Room</button>
       </div>
       <div>
         <video ref="localVideo" autoplay playsinline muted></video>
