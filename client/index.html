@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mediasoup Tutorial</title>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Mediasoup Tutorial</h1>
+      <div>
+        <input id="room" placeholder="Room" />
+        <input id="participant" placeholder="Participant" />
+      </div>
+      <div>
+        <button onclick="joinRoom()">Join Room</button>
+      </div>
+      <div>
+        <video ref="localVideo" autoplay playsinline muted></video>
+        <video ref="remoteVideo" autoplay playsinline></video>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
