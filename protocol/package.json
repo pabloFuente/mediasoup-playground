@@ -1,14 +1,15 @@
 {
   "scripts": {
-    "build-flatc": "if [ -f flatc ]; then echo 'flatc available' && exit 0; fi; git clone https://github.com/google/flatbuffers.git && cd flatbuffers && cmake -G \"Unix Makefiles\" && make && chmod +x flatc && cp flatc ../. && cd .. && rm -rf flatbuffers",
-    "compile-schema": "rm -rf fbs && ./flatc -o fbs --ts --grpc clientToServer.fbs grpc.fbs",
-    "from-cjs-to-esm": "npx fix-esm-import-path fbs && npx cjs-to-es6 fbs && grep -rl --include \\*.js ./fbs | xargs sed -i --regexp-extended 's|var (.+) = exports\\..+ = \\{|export var \\1 = {|'",
-    "disable-ts-check": "sed -i '1i // @ts-nocheck' fbs/fbs/client-to-server/request.ts && sed -i '1i // @ts-nocheck' fbs/fbs/client-to-server/response.ts",
-    "copy-schema": "rm -rf ../server/src/fbs && cp -r fbs ../server/src/. && rm -rf ../client/src/fbs && cp -r fbs ../client/src/.",
-    "generate": "npm run compile-schema && npm run from-cjs-to-esm && npm run disable-ts-check && npm run copy-schema"
+    "generate": "npm run compile && npm run copy",
+    "compile": "npx buf generate protobufs",
+    "copy": "rm -rf ../server/src/protocol/ && cp -a ./protocol ../server/src/. && rm -rf ../client/src/protocol/ && cp -a ./protocol ../client/src/."
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.34.0",
+    "@bufbuild/protobuf": "^1.10.0",
+    "@bufbuild/protoc-gen-es": "^1.10.0",
     "cjs-to-es6": "^2.0.1",
-    "fix-esm-import-path": "^1.10.0"
+    "fix-esm-import-path": "^1.10.0",
+    "ts-proto": "^1.181.0"
   }
 }

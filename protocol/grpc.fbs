@@ -1,7 +1,0 @@
-include "clientToServer.fbs";
-
-namespace FBS.Grpc;
-
-rpc_service MediasoupTutorial {
-  PrepareSender(FBS.ClientToServer.PrepareSenderRequest):FBS.ClientToServer.PrepareSenderResponse;
-}

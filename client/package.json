@@ -11,9 +11,9 @@
     "format:check": "npx prettier --check ."
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.10.11",
-    "flatbuffers": "^24.3.25",
-    "mediasoup-client": "^3.7.12"
+    "@bufbuild/protobuf": "^1.10.0",
+    "mediasoup-client": "^3.7.12",
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
     "husky": "^9.0.11",
