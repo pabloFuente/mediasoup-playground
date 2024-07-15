@@ -14,11 +14,12 @@
         <input id="participant" placeholder="Participant" />
       </div>
       <div>
-        <button id="join-btn">Join Room</button>
+        <button id="publish-btn">Publish Video</button>
+        <button id="receive-btn">Receive Video</button>
       </div>
       <div>
-        <video ref="localVideo" autoplay playsinline muted></video>
-        <video ref="remoteVideo" autoplay playsinline></video>
+        <video id="local-video" autoplay playsinline muted controls></video>
+        <video id="remote-video" autoplay playsinline controls></video>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

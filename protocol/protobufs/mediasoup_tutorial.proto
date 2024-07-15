@@ -2,24 +2,56 @@ syntax = "proto3";
 
 package mediasoup;
 
-message PrepareSenderRequest {
+message CreateWebrtcTransportRequest {
     string room_name = 1;
 }
 
-message PrepareSenderResponse {
+message CreateWebrtcTransportResponse {
     optional Error error = 1;
     string router_rtp_capabilities = 2;
     string transport_options = 3;
 }
 
 message ConnectWebrtcTransportRequest {
-    string transport_id = 1;
-    string dtls_parameters = 2;
+    string room_name = 1;
+    string transport_id = 2;
+    string dtls_parameters = 3;
 }
 
 message ConnectWebrtcTransportResponse {
     optional Error error = 1;
+}
+
+message ProduceRequest {
+    string room_name = 1;
     string transport_id = 2;
+    string kind = 3;
+	string rtp_parameters = 4;
+}
+
+message ProduceResponse {
+    optional Error error = 1;
+    string producer_id = 2;
+}
+
+message ConsumeRequest {
+    string room_name = 1;
+    string transport_id = 2;
+    string producer_id = 3;
+    string rtp_capabilities = 4;
+}
+
+message ConsumeResponse {
+    optional Error error = 1;
+    string id = 2;
+    string producer_id = 3;
+    string kind = 4;
+    string rtp_parameters = 5;
+}
+
+message ResumeConsumerRequest {
+    string room_name = 1;
+    string consumer_id = 2;
 }
 
 message Error {

@@ -1,7 +1,7 @@
 import os from "os";
 import mediasoup from "mediasoup";
-
 import { Worker } from "mediasoup/node/lib/types.js";
+import { Logger } from "../library/logging.js";
 
 export class MsWorkerService {
   MAX_WORKERS = os.cpus().length;
@@ -14,6 +14,7 @@ export class MsWorkerService {
   async getNewWorkerOrLessLoaded() {
     if (this.workers.length < this.MAX_WORKERS) {
       const newWorker = await mediasoup.createWorker();
+      Logger.info("Worker created");
       this.workers.push(newWorker);
       return newWorker;
     }

@@ -7,46 +7,46 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
- * @generated from message mediasoup.PrepareSenderRequest
+ * @generated from message mediasoup.CreateWebrtcTransportRequest
  */
-export class PrepareSenderRequest extends Message<PrepareSenderRequest> {
+export class CreateWebrtcTransportRequest extends Message<CreateWebrtcTransportRequest> {
   /**
    * @generated from field: string room_name = 1;
    */
   roomName = "";
 
-  constructor(data?: PartialMessage<PrepareSenderRequest>) {
+  constructor(data?: PartialMessage<CreateWebrtcTransportRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "mediasoup.PrepareSenderRequest";
+  static readonly typeName = "mediasoup.CreateWebrtcTransportRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "room_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PrepareSenderRequest {
-    return new PrepareSenderRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateWebrtcTransportRequest {
+    return new CreateWebrtcTransportRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PrepareSenderRequest {
-    return new PrepareSenderRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateWebrtcTransportRequest {
+    return new CreateWebrtcTransportRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PrepareSenderRequest {
-    return new PrepareSenderRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateWebrtcTransportRequest {
+    return new CreateWebrtcTransportRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: PrepareSenderRequest | PlainMessage<PrepareSenderRequest> | undefined, b: PrepareSenderRequest | PlainMessage<PrepareSenderRequest> | undefined): boolean {
-    return proto3.util.equals(PrepareSenderRequest, a, b);
+  static equals(a: CreateWebrtcTransportRequest | PlainMessage<CreateWebrtcTransportRequest> | undefined, b: CreateWebrtcTransportRequest | PlainMessage<CreateWebrtcTransportRequest> | undefined): boolean {
+    return proto3.util.equals(CreateWebrtcTransportRequest, a, b);
   }
 }
 
 /**
- * @generated from message mediasoup.PrepareSenderResponse
+ * @generated from message mediasoup.CreateWebrtcTransportResponse
  */
-export class PrepareSenderResponse extends Message<PrepareSenderResponse> {
+export class CreateWebrtcTransportResponse extends Message<CreateWebrtcTransportResponse> {
   /**
    * @generated from field: optional mediasoup.Error error = 1;
    */
@@ -62,33 +62,33 @@ export class PrepareSenderResponse extends Message<PrepareSenderResponse> {
    */
   transportOptions = "";
 
-  constructor(data?: PartialMessage<PrepareSenderResponse>) {
+  constructor(data?: PartialMessage<CreateWebrtcTransportResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "mediasoup.PrepareSenderResponse";
+  static readonly typeName = "mediasoup.CreateWebrtcTransportResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "error", kind: "message", T: Error, opt: true },
     { no: 2, name: "router_rtp_capabilities", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "transport_options", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PrepareSenderResponse {
-    return new PrepareSenderResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateWebrtcTransportResponse {
+    return new CreateWebrtcTransportResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PrepareSenderResponse {
-    return new PrepareSenderResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateWebrtcTransportResponse {
+    return new CreateWebrtcTransportResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PrepareSenderResponse {
-    return new PrepareSenderResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateWebrtcTransportResponse {
+    return new CreateWebrtcTransportResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: PrepareSenderResponse | PlainMessage<PrepareSenderResponse> | undefined, b: PrepareSenderResponse | PlainMessage<PrepareSenderResponse> | undefined): boolean {
-    return proto3.util.equals(PrepareSenderResponse, a, b);
+  static equals(a: CreateWebrtcTransportResponse | PlainMessage<CreateWebrtcTransportResponse> | undefined, b: CreateWebrtcTransportResponse | PlainMessage<CreateWebrtcTransportResponse> | undefined): boolean {
+    return proto3.util.equals(CreateWebrtcTransportResponse, a, b);
   }
 }
 
@@ -97,12 +97,17 @@ export class PrepareSenderResponse extends Message<PrepareSenderResponse> {
  */
 export class ConnectWebrtcTransportRequest extends Message<ConnectWebrtcTransportRequest> {
   /**
-   * @generated from field: string transport_id = 1;
+   * @generated from field: string room_name = 1;
+   */
+  roomName = "";
+
+  /**
+   * @generated from field: string transport_id = 2;
    */
   transportId = "";
 
   /**
-   * @generated from field: string dtls_parameters = 2;
+   * @generated from field: string dtls_parameters = 3;
    */
   dtlsParameters = "";
 
@@ -114,8 +119,9 @@ export class ConnectWebrtcTransportRequest extends Message<ConnectWebrtcTranspor
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "mediasoup.ConnectWebrtcTransportRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "transport_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "dtls_parameters", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "room_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "transport_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "dtls_parameters", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConnectWebrtcTransportRequest {
@@ -144,11 +150,6 @@ export class ConnectWebrtcTransportResponse extends Message<ConnectWebrtcTranspo
    */
   error?: Error;
 
-  /**
-   * @generated from field: string transport_id = 2;
-   */
-  transportId = "";
-
   constructor(data?: PartialMessage<ConnectWebrtcTransportResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -158,7 +159,6 @@ export class ConnectWebrtcTransportResponse extends Message<ConnectWebrtcTranspo
   static readonly typeName = "mediasoup.ConnectWebrtcTransportResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "error", kind: "message", T: Error, opt: true },
-    { no: 2, name: "transport_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConnectWebrtcTransportResponse {
@@ -175,6 +175,263 @@ export class ConnectWebrtcTransportResponse extends Message<ConnectWebrtcTranspo
 
   static equals(a: ConnectWebrtcTransportResponse | PlainMessage<ConnectWebrtcTransportResponse> | undefined, b: ConnectWebrtcTransportResponse | PlainMessage<ConnectWebrtcTransportResponse> | undefined): boolean {
     return proto3.util.equals(ConnectWebrtcTransportResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message mediasoup.ProduceRequest
+ */
+export class ProduceRequest extends Message<ProduceRequest> {
+  /**
+   * @generated from field: string room_name = 1;
+   */
+  roomName = "";
+
+  /**
+   * @generated from field: string transport_id = 2;
+   */
+  transportId = "";
+
+  /**
+   * @generated from field: string kind = 3;
+   */
+  kind = "";
+
+  /**
+   * @generated from field: string rtp_parameters = 4;
+   */
+  rtpParameters = "";
+
+  constructor(data?: PartialMessage<ProduceRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "mediasoup.ProduceRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "room_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "transport_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "kind", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "rtp_parameters", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ProduceRequest {
+    return new ProduceRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ProduceRequest {
+    return new ProduceRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ProduceRequest {
+    return new ProduceRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ProduceRequest | PlainMessage<ProduceRequest> | undefined, b: ProduceRequest | PlainMessage<ProduceRequest> | undefined): boolean {
+    return proto3.util.equals(ProduceRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message mediasoup.ProduceResponse
+ */
+export class ProduceResponse extends Message<ProduceResponse> {
+  /**
+   * @generated from field: optional mediasoup.Error error = 1;
+   */
+  error?: Error;
+
+  /**
+   * @generated from field: string producer_id = 2;
+   */
+  producerId = "";
+
+  constructor(data?: PartialMessage<ProduceResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "mediasoup.ProduceResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "error", kind: "message", T: Error, opt: true },
+    { no: 2, name: "producer_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ProduceResponse {
+    return new ProduceResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ProduceResponse {
+    return new ProduceResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ProduceResponse {
+    return new ProduceResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ProduceResponse | PlainMessage<ProduceResponse> | undefined, b: ProduceResponse | PlainMessage<ProduceResponse> | undefined): boolean {
+    return proto3.util.equals(ProduceResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message mediasoup.ConsumeRequest
+ */
+export class ConsumeRequest extends Message<ConsumeRequest> {
+  /**
+   * @generated from field: string room_name = 1;
+   */
+  roomName = "";
+
+  /**
+   * @generated from field: string transport_id = 2;
+   */
+  transportId = "";
+
+  /**
+   * @generated from field: string producer_id = 3;
+   */
+  producerId = "";
+
+  /**
+   * @generated from field: string rtp_capabilities = 4;
+   */
+  rtpCapabilities = "";
+
+  constructor(data?: PartialMessage<ConsumeRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "mediasoup.ConsumeRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "room_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "transport_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "producer_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "rtp_capabilities", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConsumeRequest {
+    return new ConsumeRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ConsumeRequest {
+    return new ConsumeRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ConsumeRequest {
+    return new ConsumeRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ConsumeRequest | PlainMessage<ConsumeRequest> | undefined, b: ConsumeRequest | PlainMessage<ConsumeRequest> | undefined): boolean {
+    return proto3.util.equals(ConsumeRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message mediasoup.ConsumeResponse
+ */
+export class ConsumeResponse extends Message<ConsumeResponse> {
+  /**
+   * @generated from field: optional mediasoup.Error error = 1;
+   */
+  error?: Error;
+
+  /**
+   * @generated from field: string id = 2;
+   */
+  id = "";
+
+  /**
+   * @generated from field: string producer_id = 3;
+   */
+  producerId = "";
+
+  /**
+   * @generated from field: string kind = 4;
+   */
+  kind = "";
+
+  /**
+   * @generated from field: string rtp_parameters = 5;
+   */
+  rtpParameters = "";
+
+  constructor(data?: PartialMessage<ConsumeResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "mediasoup.ConsumeResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "error", kind: "message", T: Error, opt: true },
+    { no: 2, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "producer_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "kind", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "rtp_parameters", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConsumeResponse {
+    return new ConsumeResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ConsumeResponse {
+    return new ConsumeResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ConsumeResponse {
+    return new ConsumeResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ConsumeResponse | PlainMessage<ConsumeResponse> | undefined, b: ConsumeResponse | PlainMessage<ConsumeResponse> | undefined): boolean {
+    return proto3.util.equals(ConsumeResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message mediasoup.ResumeConsumerRequest
+ */
+export class ResumeConsumerRequest extends Message<ResumeConsumerRequest> {
+  /**
+   * @generated from field: string room_name = 1;
+   */
+  roomName = "";
+
+  /**
+   * @generated from field: string consumer_id = 2;
+   */
+  consumerId = "";
+
+  constructor(data?: PartialMessage<ResumeConsumerRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "mediasoup.ResumeConsumerRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "room_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "consumer_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ResumeConsumerRequest {
+    return new ResumeConsumerRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ResumeConsumerRequest {
+    return new ResumeConsumerRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ResumeConsumerRequest {
+    return new ResumeConsumerRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ResumeConsumerRequest | PlainMessage<ResumeConsumerRequest> | undefined, b: ResumeConsumerRequest | PlainMessage<ResumeConsumerRequest> | undefined): boolean {
+    return proto3.util.equals(ResumeConsumerRequest, a, b);
   }
 }
 
