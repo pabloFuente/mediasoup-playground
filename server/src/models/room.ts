@@ -1,10 +1,12 @@
 import {
   Consumer,
+  DataProducer,
   Producer,
   Router,
   RtpCapabilities,
   RtpCodecCapability,
   RtpParameters,
+  SctpStreamParameters,
   TransportListenInfo,
   WebRtcTransport,
   Worker,
@@ -48,6 +50,7 @@ export class Room {
         listenInfos: [listenInfo],
         enableUdp: true,
         enableTcp: true,
+        enableSctp: true,
         appData: {
           myAppData: "This is my app data",
         },
@@ -102,5 +105,23 @@ export class Room {
     });
     this.consumers.set(consumer.id, consumer);
     return consumer;
+  }
+
+  async initDataProducer(
+    transportId: string,
+    sctpStreamParameters: SctpStreamParameters,
+    label: string
+  ): Promise<DataProducer> {
+    const transport = this.webRtcTransports.get(transportId);
+    if (!transport) {
+      throw new Error(
+        "WebRtcTransport " + transportId + "not found for room " + this.name
+      );
+    }
+    const dataProducer = await transport.produceData({
+      sctpStreamParameters,
+      label,
+    });
+    return dataProducer;
   }
 }

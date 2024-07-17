@@ -13,7 +13,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "build": "npx tsc",
-    "build:bundle": "npm run build && npx esbuild dist/src/index.js --bundle --platform=node --outfile=out/index.cjs",
+    "build:bundle": "npm run build && npx esbuild dist/src/index.js --bundle --platform=node --minify --outfile=out/index.cjs",
     "build:binary": "mkdir -p bin && npm run build:bundle && node --experimental-sea-config sea-config.json && cp $(command -v node) bin/mediasoup-server && npx postject bin/mediasoup-server NODE_SEA_BLOB bin/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 && rm bin/sea-prep.blob",
     "lint": "npx eslint --fix",
     "format": "npx prettier --write .",

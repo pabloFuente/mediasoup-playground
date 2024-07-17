@@ -11,9 +11,12 @@ import {
   ConsumeRequest,
   ConsumeResponse,
   ResumeConsumerRequest,
+  ProduceDataRequest,
+  ProduceDataResponse,
 } from "../protocol/mediasoup_tutorial_pb.js";
 import { RoomService } from "../services/room.service.js";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters.js";
+import { SctpStreamParameters } from "mediasoup/node/lib/types.js";
 
 export class SocketController {
   socketServer: any;
@@ -31,7 +34,10 @@ export class SocketController {
 
       socket.on(
         "createWebRtcTransport",
-        async (request: CreateWebrtcTransportRequest, callback: Function) => {
+        async (
+          request: CreateWebrtcTransportRequest,
+          callback: (response: CreateWebrtcTransportResponse) => void
+        ) => {
           Logger.info("createWebRtcTransport: " + JSON.stringify(request));
           try {
             let room: Room = await this.roomService.getRoom(request.roomName);
@@ -57,7 +63,10 @@ export class SocketController {
 
       socket.on(
         "connectWebRtcTransport",
-        async (request: ConnectWebrtcTransportRequest, callback: Function) => {
+        async (
+          request: ConnectWebrtcTransportRequest,
+          callback: (response: ConnectWebrtcTransportResponse) => void
+        ) => {
           Logger.info("connectWebRtcTransport: ", request);
           try {
             const room = await this.roomService.getRoom(request.roomName);
@@ -81,7 +90,7 @@ export class SocketController {
                 dtlsParameters: JSON.parse(request.dtlsParameters),
               });
               Logger.info("connectWebRtcTransport success");
-              callback({});
+              callback(new ConnectWebrtcTransportResponse({}));
             }
           } catch (err: any) {
             Logger.error("connectWebRtcTransport error: ", err);
@@ -97,7 +106,10 @@ export class SocketController {
 
       socket.on(
         "produce",
-        async (request: ProduceRequest, callback: Function) => {
+        async (
+          request: ProduceRequest,
+          callback: (response: ProduceResponse) => void
+        ) => {
           Logger.info("produce request");
           try {
             const room = await this.roomService.getRoom(request.roomName);
@@ -124,7 +136,10 @@ export class SocketController {
 
       socket.on(
         "consume",
-        async (request: ConsumeRequest, callback: Function) => {
+        async (
+          request: ConsumeRequest,
+          callback: (response: ConsumeResponse) => void
+        ) => {
           Logger.info("consume request");
           try {
             const room = await this.roomService.getRoom(request.roomName);
@@ -160,7 +175,7 @@ export class SocketController {
             callback(response);
           } catch (err: any) {
             Logger.error("produce error: ", err);
-            const errorResponse = new ProduceResponse({
+            const errorResponse = new ConsumeResponse({
               error: {
                 message: err.message,
               },
@@ -185,6 +200,42 @@ export class SocketController {
           Logger.error("resumeConsumer error: ", err);
         }
       });
+
+      socket.on(
+        "produceData",
+        async (
+          request: ProduceDataRequest,
+          callback: (response: ProduceDataResponse) => void
+        ) => {
+          Logger.info("produceData request");
+          try {
+            const room = await this.roomService.getRoom(request.roomName);
+            const dataProducer = await room.initDataProducer(
+              request.transportId,
+              JSON.parse(request.sctpStreamParameters) as SctpStreamParameters,
+              request.label
+            );
+            Logger.info("produceData success");
+
+            dataProducer.on("transportclose", () => {
+              Logger.warn("transport closed so dataProducer closed");
+            });
+
+            const response = new ProduceDataResponse({
+              dataProducerId: dataProducer.id,
+            });
+            callback(response);
+          } catch (err: any) {
+            Logger.error("produceData error: ", err);
+            const errorResponse = new ProduceDataResponse({
+              error: {
+                message: err.message,
+              },
+            });
+            callback(errorResponse);
+          }
+        }
+      );
     });
   }
 }

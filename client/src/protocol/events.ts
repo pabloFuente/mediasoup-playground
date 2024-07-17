@@ -5,8 +5,11 @@ import {
   ConsumeResponse,
   CreateWebrtcTransportRequest,
   CreateWebrtcTransportResponse,
+  ProduceDataRequest,
+  ProduceDataResponse,
   ProduceRequest,
   ProduceResponse,
+  ResumeConsumerRequest,
 } from "./mediasoup_tutorial_pb.js";
 
 export interface ServerToClientEvents {
@@ -30,6 +33,11 @@ export interface ClientToServerEvents {
   consume: (
     request: ConsumeRequest,
     callback: (response: ConsumeResponse) => void
+  ) => void;
+  resumeConsumer: (request: ResumeConsumerRequest) => void;
+  produceData: (
+    request: ProduceDataRequest,
+    callback: (response: ProduceDataResponse) => void
   ) => void;
 }
 

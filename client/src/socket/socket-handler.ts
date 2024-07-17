@@ -1,8 +1,10 @@
 import { io, Socket } from "socket.io-client";
 import { ServerToClientEvents, ClientToServerEvents } from "../protocol/events";
-import { RtpCapabilities } from "mediasoup-client/lib/RtpParameters";
+import { MediaKind, RtpCapabilities } from "mediasoup-client/lib/RtpParameters";
 import {
   Consumer,
+  DataConsumer,
+  DataProducer,
   DtlsParameters,
   Producer,
   Transport,
@@ -16,6 +18,8 @@ import {
   ConsumeResponse,
   CreateWebrtcTransportRequest,
   CreateWebrtcTransportResponse,
+  ProduceDataRequest,
+  ProduceDataResponse,
   ProduceRequest,
   ProduceResponse,
   ResumeConsumerRequest,
@@ -26,10 +30,12 @@ export class SocketHandler {
   roomName?: string;
   device?: Device;
 
-  sendTransports: Map<string, Transport> = new Map();
-  receiveTransports: Map<string, Transport> = new Map();
+  sendTransport?: Transport;
+  receiveTransport?: Transport;
   producers: Map<string, Producer> = new Map();
   consumers: Map<string, Consumer> = new Map();
+  dataProducer?: DataProducer;
+  dataConsumer?: DataConsumer;
 
   connectSocket(url: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -102,12 +108,12 @@ export class SocketHandler {
           if (direction === "send") {
             const sendTransport =
               await this.createSendTransport(transportOptions);
-            this.sendTransports.set(sendTransport.id, sendTransport);
+            this.sendTransport = sendTransport;
             resolve(sendTransport);
           } else {
             const receiveTransport =
               await this.createReceiveTransport(transportOptions);
-            this.receiveTransports.set(receiveTransport.id, receiveTransport);
+            this.receiveTransport = receiveTransport;
             resolve(receiveTransport);
           }
         }
@@ -115,40 +121,33 @@ export class SocketHandler {
     });
   }
 
-  publishVideo(
+  publishTrack(
     sendTransport: Transport,
-    videoTrack: MediaStreamTrack
-  ): Promise<void> {
+    track: MediaStreamTrack
+  ): Promise<Producer> {
     return new Promise(async (resolve, reject) => {
-      if (!this.device?.canProduce("video")) {
-        reject(new Error("Device cannot produce video"));
+      if (!this.device?.canProduce(track.kind as MediaKind)) {
+        reject(new Error("Device cannot produce " + track.kind));
         return;
       }
       const producer = await sendTransport.produce({
-        track: videoTrack,
-        encodings: [
-          { maxBitrate: 100000 },
-          { maxBitrate: 300000 },
-          { maxBitrate: 900000 },
-        ],
-        codecOptions: {
-          videoGoogleStartBitrate: 1000,
-        },
+        track: track,
       });
       console.log("Producer created with id: ", producer.id);
       this.producers.set(producer.id, producer);
-      resolve();
+      resolve(producer);
     });
   }
 
-  publishAudio() {}
-
-  subscribeVideo(receiveTransport: Transport): Promise<MediaStreamTrack> {
+  subscribeTrack(
+    receiveTransport: Transport,
+    producerId: string
+  ): Promise<MediaStreamTrack> {
     return new Promise(async (resolve, reject) => {
       const request: ConsumeRequest = new ConsumeRequest({
         roomName: this.roomName!,
         transportId: receiveTransport.id,
-        producerId: this.producers.keys().next().value,
+        producerId,
         rtpCapabilities: JSON.stringify(this.device!.rtpCapabilities),
       });
       this.socket!.emit(
@@ -166,6 +165,8 @@ export class SocketHandler {
             kind: response.kind as "audio" | "video",
             rtpParameters: JSON.parse(response.rtpParameters),
           });
+          console.log("Consumer created with id: ", consumer.id);
+          this.consumers.set(consumer.id, consumer);
           const req: ResumeConsumerRequest = new ResumeConsumerRequest({
             roomName: this.roomName!,
             consumerId: consumer.id,
@@ -177,6 +178,22 @@ export class SocketHandler {
     });
   }
 
+  produceData(): Promise<DataProducer> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const dataProducer = await this.sendTransport!.produceData({
+          ordered: true,
+          label: "produceDataChannel",
+        });
+        console.log("DataProducer created with id: ", dataProducer.id);
+        this.dataProducer = dataProducer;
+        resolve(dataProducer);
+      } catch (error: any) {
+        reject(error);
+      }
+    });
+  }
+
   private connectWebRtcTransport(
     roomName: string,
     transportId: string,
@@ -184,54 +201,33 @@ export class SocketHandler {
     callback: Function,
     errback: Function
   ) {
-    const request = new ConnectWebrtcTransportRequest({
-      roomName,
-      transportId,
-      dtlsParameters: JSON.stringify(dtlsParameters),
-    });
-    console.log("connectWebRtcTransport request: ", request);
-    this.socket!.emit(
-      "connectWebRtcTransport",
-      request,
-      async (response: ConnectWebrtcTransportResponse) => {
-        if (response.error) {
-          console.error(
-            "connectWebRtcTransport remote error: ",
-            response.error
-          );
-          errback(new Error(response.error.message));
-          return;
+    try {
+      const request = new ConnectWebrtcTransportRequest({
+        roomName,
+        transportId,
+        dtlsParameters: JSON.stringify(dtlsParameters),
+      });
+      console.log("connectWebRtcTransport request: ", request);
+      this.socket!.emit(
+        "connectWebRtcTransport",
+        request,
+        async (response: ConnectWebrtcTransportResponse) => {
+          if (response.error) {
+            console.error(
+              "connectWebRtcTransport remote error: ",
+              response.error
+            );
+            errback(new Error(response.error.message));
+            return;
+          }
+          console.log("connectWebRtcTransport response: ", response);
+          callback();
         }
-        console.log("connectWebRtcTransport response: ", response);
-        callback();
-      }
-    );
-  }
-
-  private produce(
-    roomName: string,
-    transportId: string,
-    kind: string,
-    rtpParameters: any,
-    callback: Function,
-    errback: Function
-  ) {
-    const request = new ProduceRequest({
-      roomName,
-      transportId,
-      kind,
-      rtpParameters: JSON.stringify(rtpParameters),
-    });
-    console.log("produce request: ", request);
-    this.socket!.emit("produce", request, async (response: ProduceResponse) => {
-      if (response.error) {
-        console.error("produce remote error: ", response.error);
-        errback(new Error(response.error.message));
-        return;
-      }
-      console.log("produce response: ", response);
-      callback({ id: response.producerId });
-    });
+      );
+    } catch (error: any) {
+      console.error("connectWebRtcTransport error: ", error);
+      errback(new Error(error.message));
+    }
   }
 
   private async createDevice(
@@ -281,15 +277,63 @@ export class SocketHandler {
     sendTransport.on(
       "produce",
       async ({ kind, rtpParameters, appData }, callback, errback) => {
-        console.log("sendTransport 'produce' event");
-        this.produce(
-          this.roomName!,
-          sendTransport.id,
-          kind,
-          rtpParameters,
-          callback,
-          errback
-        );
+        try {
+          console.log("sendTransport 'produce' event");
+          const request = new ProduceRequest({
+            roomName: this.roomName!,
+            transportId: sendTransport.id,
+            kind,
+            rtpParameters: JSON.stringify(rtpParameters),
+          });
+          console.log("produce request: ", request);
+          this.socket!.emit(
+            "produce",
+            request,
+            async (response: ProduceResponse) => {
+              if (response.error) {
+                console.error("produce remote error: ", response.error);
+                errback(new Error(response.error.message));
+                return;
+              }
+              console.log("produce response: ", response);
+              callback({ id: response.producerId });
+            }
+          );
+        } catch (error: any) {
+          console.error("sendTransport 'produce' event error: ", error);
+          errback(new Error(error.message));
+        }
+      }
+    );
+    sendTransport.on(
+      "producedata",
+      async ({ sctpStreamParameters, label }, callback, errback) => {
+        try {
+          console.log("sendTransport 'producedata' event");
+          const request: ProduceDataRequest = new ProduceDataRequest({
+            roomName: this.roomName!,
+            transportId: sendTransport.id,
+            sctpStreamParameters: JSON.stringify(sctpStreamParameters),
+            label,
+          });
+          console.log("produceData request: ", request);
+          this.socket!.emit(
+            "produceData",
+            request,
+            async (response: ProduceDataResponse) => {
+              if (response.error) {
+                console.error("produce data remote error: ", response.error);
+                errback(new Error(response.error.message));
+                return;
+              }
+              console.log("produce data response: ", response);
+              callback({ id: response.dataProducerId });
+            }
+          );
+        } catch (error: any) {
+          console.error("sendTransport 'producedata' event error: ", error);
+          errback(new Error(error.message));
+        }
       }
     );
     return sendTransport;
