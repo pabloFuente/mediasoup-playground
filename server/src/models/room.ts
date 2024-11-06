@@ -12,6 +12,7 @@ import {
   WebRtcTransport,
   Worker,
 } from "mediasoup/node/lib/types.js";
+import { CONFIG } from "src/config/config.js";
 
 import { Logger } from "../library/logging.js";
 import { getFilteredMediasoupRtpCapabilities1 } from "../utils/capabilities.js";
@@ -44,8 +45,12 @@ export class Room {
   async initWebRtcTransport(): Promise<any> {
     const listenInfo: TransportListenInfo = {
       protocol: "udp",
-      ip: "127.0.0.1",
-      announcedIp: "127.0.0.1",
+      ip: CONFIG.ANNOUNCED_IP,
+      announcedAddress: CONFIG.ANNOUNCED_IP,
+      portRange: {
+        min: Number(CONFIG.RTC_MIN_PORT),
+        max: Number(CONFIG.RTC_MAX_PORT),
+      },
     };
     const webRtcTransport: WebRtcTransport =
       await this.router!.createWebRtcTransport({

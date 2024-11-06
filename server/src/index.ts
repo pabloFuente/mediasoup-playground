@@ -1,10 +1,10 @@
 import fs from "fs";
 import http from "http";
 import https from "https";
-import dotenv from "dotenv";
 import express, { Express } from "express";
 import * as SocketIO from "socket.io";
 
+import { CONFIG } from "./config/config.js";
 import { SocketController } from "./controllers/socket-controller.js";
 import { Logger } from "./library/logging.js";
 import {
@@ -15,15 +15,11 @@ import {
 } from "./protocol/events.js";
 import { handleBinary } from "./utils/startup.js";
 
-dotenv.config();
 handleBinary();
-
-const isHttps = process.env.HTTPS === "true";
-const port = process.env.PORT || 3000;
 
 const app: Express = express();
 let server;
-if (isHttps) {
+if (CONFIG.IS_HTTPS) {
   server = https.createServer(
     {
       key: fs.readFileSync("key.pem"),
@@ -35,9 +31,9 @@ if (isHttps) {
   server = http.createServer(app);
 }
 
-server.listen(port as number, () => {
+server.listen(CONFIG.PORT as number, () => {
   Logger.info(
-    `mediasoup-server running at ${isHttps ? "https" : "http"}://localhost:${port}`,
+    `mediasoup-server running at ${CONFIG.IS_HTTPS ? "https" : "http"}://localhost:${CONFIG.PORT}`,
   );
 });
 
