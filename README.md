@@ -33,5 +33,5 @@ Run the client:
 ```bash
 cd client
 npm install
-npm start
+npm run dev
 ```
