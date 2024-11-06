@@ -12,7 +12,7 @@ import {
   WebRtcTransport,
   Worker,
 } from "mediasoup/node/lib/types.js";
-import { CONFIG } from "src/config/config.js";
+import { CONFIG } from "../config/config.js";
 
 import { Logger } from "../library/logging.js";
 import { getFilteredMediasoupRtpCapabilities1 } from "../utils/capabilities.js";

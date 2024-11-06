@@ -33,7 +33,7 @@ if (CONFIG.IS_HTTPS) {
 
 server.listen(CONFIG.PORT as number, () => {
   Logger.info(
-    `mediasoup-server running at ${CONFIG.IS_HTTPS ? "https" : "http"}://localhost:${CONFIG.PORT}`,
+    `mediasoup-server running at ${CONFIG.IS_HTTPS ? "https" : "http"}://${CONFIG.ANNOUNCED_IP}:${CONFIG.PORT}`,
   );
 });
 
