@@ -534,6 +534,110 @@ export class ProduceDataResponse extends Message<ProduceDataResponse> {
 }
 
 /**
+ * @generated from message mediasoup.ConsumeDataRequest
+ */
+export class ConsumeDataRequest extends Message<ConsumeDataRequest> {
+  /**
+   * @generated from field: string room_name = 1;
+   */
+  roomName = "";
+
+  /**
+   * @generated from field: string transport_id = 2;
+   */
+  transportId = "";
+
+  /**
+   * @generated from field: string data_producer_id = 3;
+   */
+  dataProducerId = "";
+
+  constructor(data?: PartialMessage<ConsumeDataRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "mediasoup.ConsumeDataRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "room_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "transport_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "data_producer_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConsumeDataRequest {
+    return new ConsumeDataRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ConsumeDataRequest {
+    return new ConsumeDataRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ConsumeDataRequest {
+    return new ConsumeDataRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ConsumeDataRequest | PlainMessage<ConsumeDataRequest> | undefined, b: ConsumeDataRequest | PlainMessage<ConsumeDataRequest> | undefined): boolean {
+    return proto3.util.equals(ConsumeDataRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message mediasoup.ConsumeDataResponse
+ */
+export class ConsumeDataResponse extends Message<ConsumeDataResponse> {
+  /**
+   * @generated from field: optional mediasoup.Error error = 1;
+   */
+  error?: Error;
+
+  /**
+   * @generated from field: string data_consumer_id = 2;
+   */
+  dataConsumerId = "";
+
+  /**
+   * @generated from field: string data_producer_id = 3;
+   */
+  dataProducerId = "";
+
+  /**
+   * @generated from field: string sctp_stream_parameters = 4;
+   */
+  sctpStreamParameters = "";
+
+  constructor(data?: PartialMessage<ConsumeDataResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "mediasoup.ConsumeDataResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "error", kind: "message", T: Error, opt: true },
+    { no: 2, name: "data_consumer_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "data_producer_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "sctp_stream_parameters", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConsumeDataResponse {
+    return new ConsumeDataResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ConsumeDataResponse {
+    return new ConsumeDataResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ConsumeDataResponse {
+    return new ConsumeDataResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ConsumeDataResponse | PlainMessage<ConsumeDataResponse> | undefined, b: ConsumeDataResponse | PlainMessage<ConsumeDataResponse> | undefined): boolean {
+    return proto3.util.equals(ConsumeDataResponse, a, b);
+  }
+}
+
+/**
  * @generated from message mediasoup.Error
  */
 export class Error extends Message<Error> {

@@ -14,6 +14,8 @@ import { Device } from "mediasoup-client";
 import {
   ConnectWebrtcTransportRequest,
   ConnectWebrtcTransportResponse,
+  ConsumeDataRequest,
+  ConsumeDataResponse,
   ConsumeRequest,
   ConsumeResponse,
   CreateWebrtcTransportRequest,
@@ -188,6 +190,39 @@ export class SocketHandler {
         console.log("DataProducer created with id: ", dataProducer.id);
         this.dataProducer = dataProducer;
         resolve(dataProducer);
+      } catch (error: any) {
+        reject(error);
+      }
+    });
+  }
+
+  consumeData(): Promise<DataConsumer> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const request = new ConsumeDataRequest({
+          roomName: this.roomName!,
+          transportId: this.receiveTransport!.id,
+          dataProducerId: this.dataProducer!.id,
+        });
+        console.log("consumeData request: ", request);
+        this.socket!.emit(
+          "consumeData",
+          request,
+          async (response: ConsumeDataResponse) => {
+            try {
+              console.log("consumeData response: ", response);
+              const dataConsumer = await this.receiveTransport!.consumeData({
+                id: response.dataProducerId,
+                dataProducerId: response.dataProducerId,
+                sctpStreamParameters: JSON.parse(response.sctpStreamParameters),
+              });
+              console.log("DataConsumer created with id: ", dataConsumer.id);
+              resolve(dataConsumer);
+            } catch (error: any) {
+              reject(error);
+            }
+          }
+        );
       } catch (error: any) {
         reject(error);
       }

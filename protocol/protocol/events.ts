@@ -1,6 +1,8 @@
 import {
   ConnectWebrtcTransportRequest,
   ConnectWebrtcTransportResponse,
+  ConsumeDataRequest,
+  ConsumeDataResponse,
   ConsumeRequest,
   ConsumeResponse,
   CreateWebrtcTransportRequest,
@@ -38,6 +40,10 @@ export interface ClientToServerEvents {
   produceData: (
     request: ProduceDataRequest,
     callback: (response: ProduceDataResponse) => void
+  ) => void;
+  consumeData: (
+    request: ConsumeDataRequest,
+    callback: (response: ConsumeDataResponse) => void
   ) => void;
 }
 

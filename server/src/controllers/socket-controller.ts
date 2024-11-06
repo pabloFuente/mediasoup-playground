@@ -13,6 +13,8 @@ import {
   ResumeConsumerRequest,
   ProduceDataRequest,
   ProduceDataResponse,
+  ConsumeDataRequest,
+  ConsumeDataResponse,
 } from "../protocol/mediasoup_tutorial_pb.js";
 import { RoomService } from "../services/room.service.js";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters.js";
@@ -228,6 +230,45 @@ export class SocketController {
           } catch (err: any) {
             Logger.error("produceData error: ", err);
             const errorResponse = new ProduceDataResponse({
+              error: {
+                message: err.message,
+              },
+            });
+            callback(errorResponse);
+          }
+        }
+      );
+
+      socket.on(
+        "consumeData",
+        async (
+          request: ConsumeDataRequest,
+          callback: (response: ConsumeDataResponse) => void
+        ) => {
+          Logger.info("consumeData request");
+          try {
+            const room = await this.roomService.getRoom(request.roomName);
+            const dataConsumer = await room.initDataConsumer(
+              request.transportId,
+              request.dataProducerId
+            );
+            Logger.info("consumeData success");
+
+            dataConsumer.on("transportclose", () => {
+              Logger.warn("transport closed so dataProducer closed");
+            });
+
+            const response = new ConsumeDataResponse({
+              dataConsumerId: dataConsumer.id,
+              dataProducerId: dataConsumer.dataProducerId,
+              sctpStreamParameters: JSON.stringify(
+                dataConsumer.sctpStreamParameters
+              ),
+            });
+            callback(response);
+          } catch (err: any) {
+            Logger.error("consumeData error: ", err);
+            const errorResponse = new ConsumeDataResponse({
               error: {
                 message: err.message,
               },

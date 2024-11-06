@@ -1,5 +1,6 @@
 import {
   Consumer,
+  DataConsumer,
   DataProducer,
   Producer,
   Router,
@@ -123,5 +124,21 @@ export class Room {
       label,
     });
     return dataProducer;
+  }
+
+  async initDataConsumer(
+    transportId: string,
+    dataProducerId: string
+  ): Promise<DataConsumer> {
+    const transport = this.webRtcTransports.get(transportId);
+    if (!transport) {
+      throw new Error(
+        "WebRtcTransport " + transportId + "not found for room " + this.name
+      );
+    }
+    const dataConsumer = await transport.consumeData({
+      dataProducerId,
+    });
+    return dataConsumer;
   }
 }

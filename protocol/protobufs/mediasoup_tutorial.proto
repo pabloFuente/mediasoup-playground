@@ -66,6 +66,19 @@ message ProduceDataResponse {
     string data_producer_id = 2;
 }
 
+message ConsumeDataRequest {
+    string room_name = 1;
+    string transport_id = 2;
+    string data_producer_id = 3;
+}
+
+message ConsumeDataResponse {
+    optional Error error = 1;
+    string data_consumer_id = 2;
+    string data_producer_id = 3;
+    string sctp_stream_parameters = 4;
+}
+
 message Error {
     string message = 1;
     optional int32 code = 2;
