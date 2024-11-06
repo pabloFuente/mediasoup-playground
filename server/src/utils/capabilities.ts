@@ -1,5 +1,5 @@
-import * as mediasoup from "mediasoup";
 import _ from "lodash";
+import * as mediasoup from "mediasoup";
 import {
   RtpCapabilities,
   RtpCodecCapability,
@@ -14,8 +14,8 @@ export function getFilteredMediasoupRtpCapabilities1(): RtpCodecCapability[] {
       .codecs!.filter(
         (c: RtpCodecCapability) =>
           !["audio/SILK", "audio/CN", "audio/telephone-event"].includes(
-            c.mimeType
-          )
+            c.mimeType,
+          ),
       )
       // Prevent errors from accidentally including some codecs with same PT.
       .map((c: RtpCodecCapability) => {
@@ -80,7 +80,7 @@ export function getFilteredMediasoupRtpCapabilities1(): RtpCodecCapability[] {
         }
         return [c];
       })
-    );
+  );
 }
 
 export function getFilteredMediasoupRtpCapabilities2(): RtpCapabilities {

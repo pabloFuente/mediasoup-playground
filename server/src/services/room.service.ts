@@ -1,7 +1,8 @@
+import AsyncLock from "async-lock";
+
 import { Room } from "../models/room.js";
 import { MsWorkerService } from "./ms-worker.service.js";
 
-import AsyncLock from "async-lock";
 const lock = new AsyncLock();
 
 export class RoomService {

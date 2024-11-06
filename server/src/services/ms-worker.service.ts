@@ -1,6 +1,7 @@
 import os from "os";
 import mediasoup from "mediasoup";
 import { Worker } from "mediasoup/node/lib/types.js";
+
 import { Logger } from "../library/logging.js";
 
 export class MsWorkerService {
@@ -23,7 +24,7 @@ export class MsWorkerService {
 
   async getLessLoadedWorker() {
     const cpuPromises = this.workers.map(async (worker) => {
-      let usage = await worker.getResourceUsage();
+      const usage = await worker.getResourceUsage();
       return usage.ru_stime + usage.ru_utime;
     });
     const cpus = await Promise.all(cpuPromises);

@@ -1,5 +1,6 @@
 import fs from "fs";
 import { getRawAsset, isSea } from "node:sea";
+
 import { Logger } from "../library/logging.js";
 
 export function handleBinary() {

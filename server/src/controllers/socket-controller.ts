@@ -1,27 +1,35 @@
-import * as SocketIO from "socket.io";
-import { Room } from "../models/room.js";
-import { Logger } from "../library/logging.js";
-import {
-  CreateWebrtcTransportRequest,
-  CreateWebrtcTransportResponse,
-  ConnectWebrtcTransportRequest,
-  ProduceRequest,
-  ProduceResponse,
-  ConnectWebrtcTransportResponse,
-  ConsumeRequest,
-  ConsumeResponse,
-  ResumeConsumerRequest,
-  ProduceDataRequest,
-  ProduceDataResponse,
-  ConsumeDataRequest,
-  ConsumeDataResponse,
-} from "../protocol/mediasoup_tutorial_pb.js";
-import { RoomService } from "../services/room.service.js";
+import { create } from "@bufbuild/protobuf";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters.js";
 import { SctpStreamParameters } from "mediasoup/node/lib/types.js";
+import * as SocketIO from "socket.io";
+
+import { Logger } from "../library/logging.js";
+import { Room } from "../models/room.js";
+import {
+  ConnectWebrtcTransportRequest,
+  ConnectWebrtcTransportResponse,
+  ConnectWebrtcTransportResponseSchema,
+  ConsumeDataRequest,
+  ConsumeDataResponse,
+  ConsumeDataResponseSchema,
+  ConsumeRequest,
+  ConsumeResponse,
+  ConsumeResponseSchema,
+  CreateWebrtcTransportRequest,
+  CreateWebrtcTransportResponse,
+  CreateWebrtcTransportResponseSchema,
+  ProduceDataRequest,
+  ProduceDataResponse,
+  ProduceDataResponseSchema,
+  ProduceRequest,
+  ProduceResponse,
+  ProduceResponseSchema,
+  ResumeConsumerRequest,
+} from "../protocol/mediasoup_tutorial_pb.js";
+import { RoomService } from "../services/room.service.js";
 
 export class SocketController {
-  socketServer: any;
+  socketServer: SocketIO.Server;
   roomService: RoomService;
 
   constructor(socketServer: SocketIO.Server) {
@@ -38,14 +46,14 @@ export class SocketController {
         "createWebRtcTransport",
         async (
           request: CreateWebrtcTransportRequest,
-          callback: (response: CreateWebrtcTransportResponse) => void
+          callback: (response: CreateWebrtcTransportResponse) => void,
         ) => {
           Logger.info("createWebRtcTransport: " + JSON.stringify(request));
           try {
-            let room: Room = await this.roomService.getRoom(request.roomName);
+            const room: Room = await this.roomService.getRoom(request.roomName);
             const routerRtpCapabilities = await room.initRouter();
             const transportOptions = await room.initWebRtcTransport();
-            const response = new CreateWebrtcTransportResponse({
+            const response = create(CreateWebrtcTransportResponseSchema, {
               routerRtpCapabilities: JSON.stringify(routerRtpCapabilities),
               transportOptions: JSON.stringify(transportOptions),
             });
@@ -53,21 +61,21 @@ export class SocketController {
             callback(response);
           } catch (err: any) {
             Logger.error("createWebRtcTransport error: ", err);
-            const errorResponse = new CreateWebrtcTransportResponse({
+            const errorResponse = create(CreateWebrtcTransportResponseSchema, {
               error: {
                 message: err.message,
               },
             });
             callback(errorResponse);
           }
-        }
+        },
       );
 
       socket.on(
         "connectWebRtcTransport",
         async (
           request: ConnectWebrtcTransportRequest,
-          callback: (response: ConnectWebrtcTransportResponse) => void
+          callback: (response: ConnectWebrtcTransportResponse) => void,
         ) => {
           Logger.info("connectWebRtcTransport: ", request);
           try {
@@ -75,42 +83,45 @@ export class SocketController {
             const transport = room.webRtcTransports.get(request.transportId);
             if (!transport) {
               Logger.error(
-                "connectWebRtcTransport error: WebRtcTransport not found"
+                "connectWebRtcTransport error: WebRtcTransport not found",
               );
-              const errorResponse = new ConnectWebrtcTransportResponse({
-                error: {
-                  message:
-                    "WebRtcTransport " +
-                    request.transportId +
-                    " not found in room " +
-                    request.roomName,
+              const errorResponse = create(
+                ConnectWebrtcTransportResponseSchema,
+                {
+                  error: {
+                    message:
+                      "WebRtcTransport " +
+                      request.transportId +
+                      " not found in room " +
+                      request.roomName,
+                  },
                 },
-              });
+              );
               callback(errorResponse);
             } else {
               await transport.connect({
                 dtlsParameters: JSON.parse(request.dtlsParameters),
               });
               Logger.info("connectWebRtcTransport success");
-              callback(new ConnectWebrtcTransportResponse({}));
+              callback(create(ConnectWebrtcTransportResponseSchema, {}));
             }
           } catch (err: any) {
             Logger.error("connectWebRtcTransport error: ", err);
-            const errorResponse = new ConnectWebrtcTransportResponse({
+            const errorResponse = create(ConnectWebrtcTransportResponseSchema, {
               error: {
                 message: err.message,
               },
             });
             callback(errorResponse);
           }
-        }
+        },
       );
 
       socket.on(
         "produce",
         async (
           request: ProduceRequest,
-          callback: (response: ProduceResponse) => void
+          callback: (response: ProduceResponse) => void,
         ) => {
           Logger.info("produce request");
           try {
@@ -118,35 +129,35 @@ export class SocketController {
             const producer = await room.initProducer(
               request.transportId,
               request.kind == "audio" ? "audio" : "video",
-              JSON.parse(request.rtpParameters)
+              JSON.parse(request.rtpParameters),
             );
-            const response: ProduceResponse = new ProduceResponse({
+            const response: ProduceResponse = create(ProduceResponseSchema, {
               producerId: producer.id,
             });
             callback(response);
           } catch (err: any) {
             Logger.error("produce error: ", err);
-            const errorResponse = new ProduceResponse({
+            const errorResponse = create(ProduceResponseSchema, {
               error: {
                 message: err.message,
               },
             });
             callback(errorResponse);
           }
-        }
+        },
       );
 
       socket.on(
         "consume",
         async (
           request: ConsumeRequest,
-          callback: (response: ConsumeResponse) => void
+          callback: (response: ConsumeResponse) => void,
         ) => {
           Logger.info("consume request");
           try {
             const room = await this.roomService.getRoom(request.roomName);
             const consumerRtpCapabilities: RtpCapabilities = JSON.parse(
-              request.rtpCapabilities
+              request.rtpCapabilities,
             );
             if (
               !room.router?.canConsume({
@@ -155,7 +166,7 @@ export class SocketController {
               })
             ) {
               Logger.error("consume error: cannot consume");
-              const errorResponse = new ConsumeResponse({
+              const errorResponse = create(ConsumeResponseSchema, {
                 error: {
                   message: "Cannot consume",
                 },
@@ -166,9 +177,9 @@ export class SocketController {
             const consumer = await room.initConsumer(
               request.transportId,
               request.producerId,
-              consumerRtpCapabilities
+              consumerRtpCapabilities,
             );
-            const response: ConsumeResponse = new ConsumeResponse({
+            const response: ConsumeResponse = create(ConsumeResponseSchema, {
               id: consumer.id,
               producerId: consumer.producerId,
               kind: consumer.kind,
@@ -177,14 +188,14 @@ export class SocketController {
             callback(response);
           } catch (err: any) {
             Logger.error("produce error: ", err);
-            const errorResponse = new ConsumeResponse({
+            const errorResponse = create(ConsumeResponseSchema, {
               error: {
                 message: err.message,
               },
             });
             callback(errorResponse);
           }
-        }
+        },
       );
 
       socket.on("resumeConsumer", async (request: ResumeConsumerRequest) => {
@@ -207,7 +218,7 @@ export class SocketController {
         "produceData",
         async (
           request: ProduceDataRequest,
-          callback: (response: ProduceDataResponse) => void
+          callback: (response: ProduceDataResponse) => void,
         ) => {
           Logger.info("produceData request");
           try {
@@ -215,7 +226,7 @@ export class SocketController {
             const dataProducer = await room.initDataProducer(
               request.transportId,
               JSON.parse(request.sctpStreamParameters) as SctpStreamParameters,
-              request.label
+              request.label,
             );
             Logger.info("produceData success");
 
@@ -223,34 +234,34 @@ export class SocketController {
               Logger.warn("transport closed so dataProducer closed");
             });
 
-            const response = new ProduceDataResponse({
+            const response = create(ProduceDataResponseSchema, {
               dataProducerId: dataProducer.id,
             });
             callback(response);
           } catch (err: any) {
             Logger.error("produceData error: ", err);
-            const errorResponse = new ProduceDataResponse({
+            const errorResponse = create(ProduceDataResponseSchema, {
               error: {
                 message: err.message,
               },
             });
             callback(errorResponse);
           }
-        }
+        },
       );
 
       socket.on(
         "consumeData",
         async (
           request: ConsumeDataRequest,
-          callback: (response: ConsumeDataResponse) => void
+          callback: (response: ConsumeDataResponse) => void,
         ) => {
           Logger.info("consumeData request");
           try {
             const room = await this.roomService.getRoom(request.roomName);
             const dataConsumer = await room.initDataConsumer(
               request.transportId,
-              request.dataProducerId
+              request.dataProducerId,
             );
             Logger.info("consumeData success");
 
@@ -258,24 +269,24 @@ export class SocketController {
               Logger.warn("transport closed so dataProducer closed");
             });
 
-            const response = new ConsumeDataResponse({
+            const response = create(ConsumeDataResponseSchema, {
               dataConsumerId: dataConsumer.id,
               dataProducerId: dataConsumer.dataProducerId,
               sctpStreamParameters: JSON.stringify(
-                dataConsumer.sctpStreamParameters
+                dataConsumer.sctpStreamParameters,
               ),
             });
             callback(response);
           } catch (err: any) {
             Logger.error("consumeData error: ", err);
-            const errorResponse = new ConsumeDataResponse({
+            const errorResponse = create(ConsumeDataResponseSchema, {
               error: {
                 message: err.message,
               },
             });
             callback(errorResponse);
           }
-        }
+        },
       );
     });
   }

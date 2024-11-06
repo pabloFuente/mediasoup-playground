@@ -1,10 +1,12 @@
 import "./style.css";
-import { SocketHandler } from "./socket/socket-handler";
+
 import {
   DataConsumer,
   DataProducer,
   Producer,
 } from "mediasoup-client/lib/types";
+
+import { SocketHandler } from "./socket/socket-handler";
 
 document.querySelector("#publish-btn")?.addEventListener("click", publish);
 document.querySelector("#receive-btn")?.addEventListener("click", subscribe);
@@ -23,7 +25,7 @@ async function publish() {
   await socketHandler.connectSocket("http://localhost:3000");
   const sendTransport = await socketHandler.createWebRtcTransport(
     roomName,
-    "send"
+    "send",
   );
   const mediaStream = await navigator.mediaDevices.getUserMedia({
     video: true,
@@ -48,10 +50,10 @@ async function subscribe() {
     .value;
   const receiveTransport = await socketHandler.createWebRtcTransport(
     roomName,
-    "recv"
+    "recv",
   );
   const remoteVideo = document.querySelector(
-    "#remote-video"
+    "#remote-video",
   ) as HTMLVideoElement;
   const [remoteTrackVideo, remoteTrackAudio] = await Promise.all([
     socketHandler.subscribeTrack(receiveTransport, producerVideo.id),

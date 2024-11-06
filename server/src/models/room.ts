@@ -12,6 +12,7 @@ import {
   WebRtcTransport,
   Worker,
 } from "mediasoup/node/lib/types.js";
+
 import { Logger } from "../library/logging.js";
 import { getFilteredMediasoupRtpCapabilities1 } from "../utils/capabilities.js";
 
@@ -57,7 +58,7 @@ export class Room {
         },
       });
     Logger.info(
-      `WebRtcTransport ${webRtcTransport.id} created for Router ${this.router?.id} of room ${this.name}`
+      `WebRtcTransport ${webRtcTransport.id} created for Router ${this.router?.id} of room ${this.name}`,
     );
     this.webRtcTransports.set(webRtcTransport.id, webRtcTransport);
     return {
@@ -72,12 +73,12 @@ export class Room {
   async initProducer(
     transportId: string,
     kind: "audio" | "video",
-    rtpParameters: RtpParameters
+    rtpParameters: RtpParameters,
   ): Promise<Producer> {
     const transport = this.webRtcTransports.get(transportId);
     if (!transport) {
       throw new Error(
-        "WebRtcTransport " + transportId + "not found for room " + this.name
+        "WebRtcTransport " + transportId + "not found for room " + this.name,
       );
     }
     const producer = await transport.produce({
@@ -91,12 +92,12 @@ export class Room {
   async initConsumer(
     transportId: string,
     producerId: string,
-    rtpCapabilities: RtpCapabilities
+    rtpCapabilities: RtpCapabilities,
   ): Promise<Consumer> {
     const transport = this.webRtcTransports.get(transportId);
     if (!transport) {
       throw new Error(
-        "WebRtcTransport " + transportId + "not found for room " + this.name
+        "WebRtcTransport " + transportId + "not found for room " + this.name,
       );
     }
     const consumer = await transport.consume({
@@ -111,12 +112,12 @@ export class Room {
   async initDataProducer(
     transportId: string,
     sctpStreamParameters: SctpStreamParameters,
-    label: string
+    label: string,
   ): Promise<DataProducer> {
     const transport = this.webRtcTransports.get(transportId);
     if (!transport) {
       throw new Error(
-        "WebRtcTransport " + transportId + "not found for room " + this.name
+        "WebRtcTransport " + transportId + "not found for room " + this.name,
       );
     }
     const dataProducer = await transport.produceData({
@@ -128,12 +129,12 @@ export class Room {
 
   async initDataConsumer(
     transportId: string,
-    dataProducerId: string
+    dataProducerId: string,
   ): Promise<DataConsumer> {
     const transport = this.webRtcTransports.get(transportId);
     if (!transport) {
       throw new Error(
-        "WebRtcTransport " + transportId + "not found for room " + this.name
+        "WebRtcTransport " + transportId + "not found for room " + this.name,
       );
     }
     const dataConsumer = await transport.consumeData({

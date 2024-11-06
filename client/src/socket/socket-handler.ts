@@ -1,5 +1,5 @@
-import { io, Socket } from "socket.io-client";
-import { ServerToClientEvents, ClientToServerEvents } from "../protocol/events";
+import { create } from "@bufbuild/protobuf";
+import { Device } from "mediasoup-client";
 import { MediaKind, RtpCapabilities } from "mediasoup-client/lib/RtpParameters";
 import {
   Consumer,
@@ -10,21 +10,27 @@ import {
   Transport,
   TransportOptions,
 } from "mediasoup-client/lib/types";
-import { Device } from "mediasoup-client";
+import { io, Socket } from "socket.io-client";
+
+import { ClientToServerEvents, ServerToClientEvents } from "../protocol/events";
 import {
-  ConnectWebrtcTransportRequest,
+  ConnectWebrtcTransportRequestSchema,
   ConnectWebrtcTransportResponse,
-  ConsumeDataRequest,
+  ConsumeDataRequestSchema,
   ConsumeDataResponse,
   ConsumeRequest,
+  ConsumeRequestSchema,
   ConsumeResponse,
   CreateWebrtcTransportRequest,
+  CreateWebrtcTransportRequestSchema,
   CreateWebrtcTransportResponse,
   ProduceDataRequest,
+  ProduceDataRequestSchema,
   ProduceDataResponse,
-  ProduceRequest,
+  ProduceRequestSchema,
   ProduceResponse,
   ResumeConsumerRequest,
+  ResumeConsumerRequestSchema,
 } from "../protocol/mediasoup_tutorial_pb";
 
 export class SocketHandler {
@@ -56,7 +62,7 @@ export class SocketHandler {
           // temporary failure, the socket will automatically try to reconnect
           console.log(
             "Connection error. Temporary failure. The socket will automatically try to reconnect",
-            error
+            error,
           );
         } else {
           // the connection was denied by the server
@@ -79,14 +85,16 @@ export class SocketHandler {
 
   createWebRtcTransport(
     roomName: string,
-    direction: "send" | "recv"
+    direction: "send" | "recv",
   ): Promise<Transport> {
     return new Promise((resolve, reject) => {
       this.roomName = roomName;
-      const request: CreateWebrtcTransportRequest =
-        new CreateWebrtcTransportRequest({
+      const request: CreateWebrtcTransportRequest = create(
+        CreateWebrtcTransportRequestSchema,
+        {
           roomName,
-        });
+        },
+      );
       this.socket!.emit(
         "createWebRtcTransport",
         request,
@@ -94,17 +102,17 @@ export class SocketHandler {
           if (response.error) {
             console.error(
               "createWebRtcTransport remote error: ",
-              response.error
+              response.error,
             );
             reject(response.error);
             return;
           }
           console.log("createWebRtcTransport response: ", response);
           const routerRtpCapabilities: RtpCapabilities = JSON.parse(
-            response.routerRtpCapabilities
+            response.routerRtpCapabilities,
           );
           const transportOptions: TransportOptions = JSON.parse(
-            response.transportOptions
+            response.transportOptions,
           );
           this.device = await this.createDevice(routerRtpCapabilities);
           if (direction === "send") {
@@ -118,14 +126,14 @@ export class SocketHandler {
             this.receiveTransport = receiveTransport;
             resolve(receiveTransport);
           }
-        }
+        },
       );
     });
   }
 
   publishTrack(
     sendTransport: Transport,
-    track: MediaStreamTrack
+    track: MediaStreamTrack,
   ): Promise<Producer> {
     return new Promise(async (resolve, reject) => {
       if (!this.device?.canProduce(track.kind as MediaKind)) {
@@ -143,10 +151,10 @@ export class SocketHandler {
 
   subscribeTrack(
     receiveTransport: Transport,
-    producerId: string
+    producerId: string,
   ): Promise<MediaStreamTrack> {
     return new Promise(async (resolve, reject) => {
-      const request: ConsumeRequest = new ConsumeRequest({
+      const request: ConsumeRequest = create(ConsumeRequestSchema, {
         roomName: this.roomName!,
         transportId: receiveTransport.id,
         producerId,
@@ -169,13 +177,16 @@ export class SocketHandler {
           });
           console.log("Consumer created with id: ", consumer.id);
           this.consumers.set(consumer.id, consumer);
-          const req: ResumeConsumerRequest = new ResumeConsumerRequest({
-            roomName: this.roomName!,
-            consumerId: consumer.id,
-          });
+          const req: ResumeConsumerRequest = create(
+            ResumeConsumerRequestSchema,
+            {
+              roomName: this.roomName!,
+              consumerId: consumer.id,
+            },
+          );
           this.socket!.emit("resumeConsumer", req);
           resolve(consumer.track);
-        }
+        },
       );
     });
   }
@@ -199,7 +210,7 @@ export class SocketHandler {
   consumeData(): Promise<DataConsumer> {
     return new Promise(async (resolve, reject) => {
       try {
-        const request = new ConsumeDataRequest({
+        const request = create(ConsumeDataRequestSchema, {
           roomName: this.roomName!,
           transportId: this.receiveTransport!.id,
           dataProducerId: this.dataProducer!.id,
@@ -221,7 +232,7 @@ export class SocketHandler {
             } catch (error: any) {
               reject(error);
             }
-          }
+          },
         );
       } catch (error: any) {
         reject(error);
@@ -234,10 +245,10 @@ export class SocketHandler {
     transportId: string,
     dtlsParameters: DtlsParameters,
     callback: Function,
-    errback: Function
+    errback: Function,
   ) {
     try {
-      const request = new ConnectWebrtcTransportRequest({
+      const request = create(ConnectWebrtcTransportRequestSchema, {
         roomName,
         transportId,
         dtlsParameters: JSON.stringify(dtlsParameters),
@@ -250,14 +261,14 @@ export class SocketHandler {
           if (response.error) {
             console.error(
               "connectWebRtcTransport remote error: ",
-              response.error
+              response.error,
             );
             errback(new Error(response.error.message));
             return;
           }
           console.log("connectWebRtcTransport response: ", response);
           callback();
-        }
+        },
       );
     } catch (error: any) {
       console.error("connectWebRtcTransport error: ", error);
@@ -266,7 +277,7 @@ export class SocketHandler {
   }
 
   private async createDevice(
-    routerRtpCapabilities: RtpCapabilities
+    routerRtpCapabilities: RtpCapabilities,
   ): Promise<Device> {
     const device = new Device();
     console.log("Device created");
@@ -281,7 +292,7 @@ export class SocketHandler {
       // orientation in an RTP header extension.
       routerRtpCapabilities.headerExtensions =
         routerRtpCapabilities.headerExtensions.filter(
-          (ext) => ext.uri !== "urn:3gpp:video-orientation"
+          (ext) => ext.uri !== "urn:3gpp:video-orientation",
         );
     }
 
@@ -291,7 +302,7 @@ export class SocketHandler {
   }
 
   private async createSendTransport(
-    transportOptions: TransportOptions
+    transportOptions: TransportOptions,
   ): Promise<Transport> {
     const sendTransport =
       await this.device!.createSendTransport(transportOptions);
@@ -305,16 +316,16 @@ export class SocketHandler {
           sendTransport.id,
           dtlsParameters,
           callback,
-          errback
+          errback,
         );
-      }
+      },
     );
     sendTransport.on(
       "produce",
-      async ({ kind, rtpParameters, appData }, callback, errback) => {
+      async ({ kind, rtpParameters }, callback, errback) => {
         try {
           console.log("sendTransport 'produce' event");
-          const request = new ProduceRequest({
+          const request = create(ProduceRequestSchema, {
             roomName: this.roomName!,
             transportId: sendTransport.id,
             kind,
@@ -332,20 +343,20 @@ export class SocketHandler {
               }
               console.log("produce response: ", response);
               callback({ id: response.producerId });
-            }
+            },
           );
         } catch (error: any) {
           console.error("sendTransport 'produce' event error: ", error);
           errback(new Error(error.message));
         }
-      }
+      },
     );
     sendTransport.on(
       "producedata",
       async ({ sctpStreamParameters, label }, callback, errback) => {
         try {
           console.log("sendTransport 'producedata' event");
-          const request: ProduceDataRequest = new ProduceDataRequest({
+          const request: ProduceDataRequest = create(ProduceDataRequestSchema, {
             roomName: this.roomName!,
             transportId: sendTransport.id,
             sctpStreamParameters: JSON.stringify(sctpStreamParameters),
@@ -363,19 +374,19 @@ export class SocketHandler {
               }
               console.log("produce data response: ", response);
               callback({ id: response.dataProducerId });
-            }
+            },
           );
         } catch (error: any) {
           console.error("sendTransport 'producedata' event error: ", error);
           errback(new Error(error.message));
         }
-      }
+      },
     );
     return sendTransport;
   }
 
   private async createReceiveTransport(
-    transportOptions: TransportOptions
+    transportOptions: TransportOptions,
   ): Promise<Transport> {
     const recvTransport =
       await this.device!.createRecvTransport(transportOptions);
@@ -389,9 +400,9 @@ export class SocketHandler {
           recvTransport.id,
           dtlsParameters,
           callback,
-          errback
+          errback,
         );
-      }
+      },
     );
     return recvTransport;
   }
