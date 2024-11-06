@@ -1,3 +1,6 @@
+import fs from "fs";
+import http from "http";
+import https from "https";
 import dotenv from "dotenv";
 import express, { Express } from "express";
 import * as SocketIO from "socket.io";
@@ -15,11 +18,27 @@ import { handleBinary } from "./utils/startup.js";
 dotenv.config();
 handleBinary();
 
-const app: Express = express();
+const isHttps = process.env.HTTPS === "true";
 const port = process.env.PORT || 3000;
 
-const httpServer = app.listen(port as number, () => {
-  Logger.info("mediasoup-server running at http://localhost:" + port);
+const app: Express = express();
+let server;
+if (isHttps) {
+  server = https.createServer(
+    {
+      key: fs.readFileSync("key.pem"),
+      cert: fs.readFileSync("cert.pem"),
+    },
+    app,
+  );
+} else {
+  server = http.createServer(app);
+}
+
+server.listen(port as number, () => {
+  Logger.info(
+    `mediasoup-server running at ${isHttps ? "https" : "http"}://localhost:${port}`,
+  );
 });
 
 const io = new SocketIO.Server<
@@ -27,7 +46,7 @@ const io = new SocketIO.Server<
   ServerToClientEvents,
   InterServerEvents,
   SocketData
->(httpServer, {
+>(server, {
   cors: {
     origin: "*",
   },

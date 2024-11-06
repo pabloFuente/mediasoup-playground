@@ -22,7 +22,7 @@ let dataConsumer: DataConsumer;
 async function publish() {
   const roomName: string = (document.getElementById("room") as HTMLInputElement)
     .value;
-  await socketHandler.connectSocket("http://localhost:3000");
+  await socketHandler.connectSocket("https://localhost:3000");
   const sendTransport = await socketHandler.createWebRtcTransport(
     roomName,
     "send",
