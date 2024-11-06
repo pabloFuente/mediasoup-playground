@@ -45,7 +45,7 @@ export class Room {
   async initWebRtcTransport(): Promise<any> {
     const listenInfo: TransportListenInfo = {
       protocol: "udp",
-      ip: CONFIG.ANNOUNCED_IP,
+      ip: "0.0.0.0",
       announcedAddress: CONFIG.ANNOUNCED_IP,
       portRange: {
         min: Number(CONFIG.RTC_MIN_PORT),
