@@ -14,10 +14,16 @@
         <input id="participant" placeholder="Participant" />
       </div>
       <div>
+        <input type="checkbox" id="screenshare" name="screenshare" checked />
+        <label for="screenshare">Screenshare</label>
+        <input type="checkbox" id="simulcast" name="simulcast" checked />
+        <label for="simulcast">Simulcast</label>
         <button id="publish-btn">Publish Video</button>
         <button id="receive-btn">Receive Video</button>
         <button id="send-data-btn">Send Data</button>
         <button id="recv-data-btn">Receive Data</button>
+        <button id="publisher-stats">Publisher stats</button>
+        <button id="subscriber-stats">Subscriber stats</button>
       </div>
       <div>
         <video id="local-video" autoplay playsinline muted controls></video>

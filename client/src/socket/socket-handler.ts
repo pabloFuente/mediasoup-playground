@@ -7,6 +7,7 @@ import {
   DataProducer,
   DtlsParameters,
   Producer,
+  ProducerOptions,
   Transport,
   TransportOptions,
 } from "mediasoup-client/lib/types";
@@ -134,15 +135,24 @@ export class SocketHandler {
   publishTrack(
     sendTransport: Transport,
     track: MediaStreamTrack,
+    simulcast: boolean = false,
   ): Promise<Producer> {
     return new Promise(async (resolve, reject) => {
       if (!this.device?.canProduce(track.kind as MediaKind)) {
         reject(new Error("Device cannot produce " + track.kind));
         return;
       }
-      const producer = await sendTransport.produce({
-        track: track,
-      });
+      const producerOptions: ProducerOptions = {
+        track,
+      };
+      if (simulcast && track.kind === "video") {
+        producerOptions.encodings = [
+          { rid: "r0", scalabilityMode: "L1T3" },
+          { rid: "r1", scalabilityMode: "L1T3" },
+          { rid: "r2", scalabilityMode: "L1T3" },
+        ];
+      }
+      const producer = await sendTransport.produce(producerOptions);
       console.log("Producer created with id: ", producer.id);
       this.producers.set(producer.id, producer);
       resolve(producer);
@@ -152,7 +162,7 @@ export class SocketHandler {
   subscribeTrack(
     receiveTransport: Transport,
     producerId: string,
-  ): Promise<MediaStreamTrack> {
+  ): Promise<Consumer> {
     return new Promise(async (resolve, reject) => {
       const request: ConsumeRequest = create(ConsumeRequestSchema, {
         roomName: this.roomName!,
@@ -185,7 +195,7 @@ export class SocketHandler {
             },
           );
           this.socket!.emit("resumeConsumer", req);
-          resolve(consumer.track);
+          resolve(consumer);
         },
       );
     });
