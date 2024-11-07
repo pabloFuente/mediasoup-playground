@@ -22,8 +22,8 @@ let server;
 if (CONFIG.IS_HTTPS) {
   server = https.createServer(
     {
-      key: fs.readFileSync("key.pem"),
-      cert: fs.readFileSync("cert.pem"),
+      cert: fs.readFileSync(CONFIG.CERT_PEM),
+      key: fs.readFileSync(CONFIG.KEY_PEM),
     },
     app,
   );
