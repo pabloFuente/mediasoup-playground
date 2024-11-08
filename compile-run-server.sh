@@ -70,6 +70,22 @@ export KEY_PEM="../key.pem"
 cd "$PARENT_DIR"/server || exit 1
 npm run build:binary || exit 1
 
+# Check announced IP
+EXTERNAL_IP=$(dig +short myip.opendns.com @resolver1.opendns.com)
+if [ "$EXTERNAL_IP" != "$MEDIASOUP_ANNOUNCED_IP" ]; then
+    echo
+    echo "  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo
+    echo "  WARNING: The announced IP address is different than the detected external IP address"
+    echo "  [External IP: $EXTERNAL_IP, Announced IP: $MEDIASOUP_ANNOUNCED_IP]"
+    echo
+    echo "  If this is a production deployment, update .env file $PARENT_DIR/server/.env with:"
+    echo "  MEDIASOUP_ANNOUNCED_IP=$EXTERNAL_IP"
+    echo
+    echo "  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo
+fi
+
 # Run the server binary
 cd "$PARENT_DIR"/server/bin || exit 1
 ./mediasoup-server
