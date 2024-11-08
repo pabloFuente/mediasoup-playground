@@ -2,8 +2,8 @@ import os from "os";
 import mediasoup from "mediasoup";
 import { Worker, WorkerSettings } from "mediasoup/node/lib/types.js";
 import semver from "semver";
-import { CONFIG } from "../config/config.js";
 
+import { CONFIG } from "../config/config.js";
 import { Logger } from "../library/logging.js";
 
 export class MsWorkerService {
