@@ -1,15 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-if ! command -v "awk" &>/dev/null; then
-    echo "Command 'awk' not found"
-    exit 1
-fi
-if ! command -v "gh" &>/dev/null; then
-    echo "Command 'gh' not found"
-    exit 1
-fi
-
 if [ "$#" -ne 1 ]; then
     echo "mediaoup version required. e.g: \"$0 3.12.16\""
     exit 1
@@ -29,10 +20,16 @@ PARENT_DIR="$(dirname "$SCRIPT_PATH")"
 # Download the mediasoup-worker binary with the correct version
 mkdir -p "$PARENT_DIR/server/bin" || exit 1
 MEDIASOUP_VERSION="$1"
-LINUX_KERNEL_VERSION=$(awk -F . '{print $1}' <<<"$(uname -r)")
 
 # Download mediasoup-worker binary if not found for the specified version
 if [ ! -f "$PARENT_DIR/server/bin/mediasoup-worker-$MEDIASOUP_VERSION" ]; then
+
+    if ! command -v "awk" &>/dev/null; then
+        echo "Command 'awk' is necessary"
+        exit 1
+    fi
+
+    LINUX_KERNEL_VERSION=$(awk -F . '{print $1}' <<<"$(uname -r)")
     DOWNLOAD_URL="https://github.com/versatica/mediasoup/releases/download/$MEDIASOUP_VERSION/mediasoup-worker-$MEDIASOUP_VERSION-linux-x64-kernel$LINUX_KERNEL_VERSION.tgz"
     if ! validate_download_url "$DOWNLOAD_URL"; then
         DOWNLOAD_URL="https://github.com/versatica/mediasoup/releases/download/$MEDIASOUP_VERSION/mediasoup-worker-$MEDIASOUP_VERSION-linux-x64.tgz"
