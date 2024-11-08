@@ -1,4 +1,4 @@
-# mediasoup-tutorial
+# mediasoup-playground
 
 This Node application is prodution ready. It comes with the necessary dependencies and their specific configurations.
 

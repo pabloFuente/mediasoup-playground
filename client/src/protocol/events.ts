@@ -12,7 +12,7 @@ import {
   ProduceRequest,
   ProduceResponse,
   ResumeConsumerRequest,
-} from "./mediasoup_tutorial_pb.js";
+} from "./mediasoup_playground_pb.js";
 
 export interface ServerToClientEvents {
   noArg: () => void;

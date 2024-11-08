@@ -25,7 +25,7 @@ import {
   ProduceResponse,
   ProduceResponseSchema,
   ResumeConsumerRequest,
-} from "../protocol/mediasoup_tutorial_pb.js";
+} from "../protocol/mediasoup_playground_pb.js";
 import { RoomService } from "../services/room.service.js";
 
 export class SocketController {

@@ -32,7 +32,7 @@ import {
   ProduceResponse,
   ResumeConsumerRequest,
   ResumeConsumerRequestSchema,
-} from "../protocol/mediasoup_tutorial_pb";
+} from "../protocol/mediasoup_playground_pb";
 
 export class SocketHandler {
   socket?: Socket<ServerToClientEvents, ClientToServerEvents>;

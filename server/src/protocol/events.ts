@@ -12,7 +12,7 @@ import {
   ProduceRequest,
   ProduceResponse,
   ResumeConsumerRequest,
-} from "./mediasoup_tutorial_pb.js";
+} from "./mediasoup_playground_pb.js";
 
 export interface ServerToClientEvents {
   noArg: () => void;
@@ -22,28 +22,28 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   createWebRtcTransport: (
     request: CreateWebrtcTransportRequest,
-    callback: (response: CreateWebrtcTransportResponse) => void,
+    callback: (response: CreateWebrtcTransportResponse) => void
   ) => void;
   connectWebRtcTransport: (
     request: ConnectWebrtcTransportRequest,
-    callback: (response: ConnectWebrtcTransportResponse) => void,
+    callback: (response: ConnectWebrtcTransportResponse) => void
   ) => void;
   produce: (
     request: ProduceRequest,
-    callback: (response: ProduceResponse) => void,
+    callback: (response: ProduceResponse) => void
   ) => void;
   consume: (
     request: ConsumeRequest,
-    callback: (response: ConsumeResponse) => void,
+    callback: (response: ConsumeResponse) => void
   ) => void;
   resumeConsumer: (request: ResumeConsumerRequest) => void;
   produceData: (
     request: ProduceDataRequest,
-    callback: (response: ProduceDataResponse) => void,
+    callback: (response: ProduceDataResponse) => void
   ) => void;
   consumeData: (
     request: ConsumeDataRequest,
-    callback: (response: ConsumeDataResponse) => void,
+    callback: (response: ConsumeDataResponse) => void
   ) => void;
 }
 
