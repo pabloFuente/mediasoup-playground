@@ -53,8 +53,9 @@ fi
 pushd "$PARENT_DIR/server" || exit 1
 if [ "$(grep -oP '(?<="mediasoup": ")[^"]*' package.json)" != "$MEDIASOUP_VERSION" ]; then
     rm -rf node_modules/mediasoup || exit 1
-    npm install mediasoup@"$MEDIASOUP_VERSION" || exit 1
+    npm i mediasoup@"$MEDIASOUP_VERSION" || exit 1
 fi
+npm i || exit 1
 popd || exit 1
 
 # Export all environment variables from .env file
