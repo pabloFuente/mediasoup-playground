@@ -8,26 +8,28 @@ import {
   RtpCodecCapability,
   RtpParameters,
   SctpStreamParameters,
-  TransportListenInfo,
   WebRtcTransport,
   Worker,
 } from "mediasoup/node/lib/types.js";
-import { CONFIG } from "../config/config.js";
+import semver from "semver";
 
+import { CONFIG } from "../config/config.js";
 import { Logger } from "../library/logging.js";
 import { getFilteredMediasoupRtpCapabilities1 } from "../utils/capabilities.js";
 
 export class Room {
   name: string;
+  mediasoupVersion: string;
   worker: Worker;
   router: Router | undefined;
   webRtcTransports: Map<WebRtcTransport["id"], WebRtcTransport> = new Map();
   producers: Map<Producer["id"], Producer> = new Map();
   consumers: Map<Consumer["id"], Consumer> = new Map();
 
-  constructor(name: string, worker: Worker) {
+  constructor(name: string, worker: Worker, mediasoupVersion: string) {
     this.name = name;
     this.worker = worker;
+    this.mediasoupVersion = mediasoupVersion;
   }
 
   async initRouter(): Promise<RtpCapabilities> {
@@ -43,25 +45,38 @@ export class Room {
   }
 
   async initWebRtcTransport(): Promise<any> {
-    const listenInfo: TransportListenInfo = {
-      protocol: "udp",
-      ip: "0.0.0.0",
-      announcedAddress: CONFIG.ANNOUNCED_IP,
-      portRange: {
-        min: Number(CONFIG.RTC_MIN_PORT),
-        max: Number(CONFIG.RTC_MAX_PORT),
+    const webRtcTransportOptions: any = {
+      enableUdp: true,
+      enableTcp: true,
+      enableSctp: true,
+      appData: {
+        myAppData: "This is my app data",
       },
     };
-    const webRtcTransport: WebRtcTransport =
-      await this.router!.createWebRtcTransport({
-        listenInfos: [listenInfo],
-        enableUdp: true,
-        enableTcp: true,
-        enableSctp: true,
-        appData: {
-          myAppData: "This is my app data",
+    if (semver.gte(this.mediasoupVersion, "3.13.0")) {
+      // TransportListenInfo for mediasoup > 3.13.0
+      webRtcTransportOptions.listenInfos = [
+        {
+          protocol: "udp",
+          ip: "0.0.0.0",
+          announcedAddress: CONFIG.ANNOUNCED_IP,
+          portRange: {
+            min: Number(CONFIG.RTC_MIN_PORT),
+            max: Number(CONFIG.RTC_MAX_PORT),
+          },
         },
-      });
+      ];
+    } else {
+      // TransportListenIps for mediasoup < 3.13.0
+      webRtcTransportOptions.listenIps = [
+        {
+          ip: "0.0.0.0",
+          announcedIp: CONFIG.ANNOUNCED_IP,
+        },
+      ];
+    }
+    const webRtcTransport: WebRtcTransport =
+      await this.router!.createWebRtcTransport(webRtcTransportOptions);
     Logger.info(
       `WebRtcTransport ${webRtcTransport.id} created for Router ${this.router?.id} of room ${this.name}`,
     );

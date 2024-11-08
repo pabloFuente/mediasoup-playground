@@ -20,7 +20,11 @@ export class RoomService {
       lock.acquire(roomName, async () => {
         if (!this.rooms.has(roomName)) {
           const worker = await this.msWorkerService.getNewWorkerOrLessLoaded();
-          room = new Room(roomName, worker);
+          room = new Room(
+            roomName,
+            worker,
+            this.msWorkerService.getMediasoupVersion(),
+          );
           this.rooms.set(roomName, room);
         } else {
           room = this.rooms.get(roomName)!;
