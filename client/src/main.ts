@@ -5,12 +5,16 @@ import {
   DataConsumer,
   DataProducer,
   Producer,
-} from "mediasoup-client/lib/types";
+  Transport,
+} from "mediasoup-client/types";
 
 import { SocketHandler } from "./socket/socket-handler";
 
 document.querySelector("#publish-btn")?.addEventListener("click", publish);
 document.querySelector("#receive-btn")?.addEventListener("click", subscribe);
+document
+  .querySelector("#sub-unsub-btn")
+  ?.addEventListener("click", subUnsub);
 document.querySelector("#send-data-btn")?.addEventListener("click", sendData);
 document.querySelector("#recv-data-btn")?.addEventListener("click", recvData);
 document
@@ -27,6 +31,8 @@ let consumerVideo: Consumer;
 let consumerAudio: Consumer;
 let dataProducer: DataProducer;
 let dataConsumer: DataConsumer;
+let subbed = false;
+let receiveTransport: Transport;
 
 async function publish() {
   const roomName: string = (document.getElementById("room") as HTMLInputElement)
@@ -44,6 +50,7 @@ async function publish() {
     if (screenshare) {
       mediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
+        audio: false,
       });
     } else {
       mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -84,7 +91,7 @@ async function subscribe() {
   }
   const roomName: string = (document.getElementById("room") as HTMLInputElement)
     .value;
-  const receiveTransport = await socketHandler.createWebRtcTransport(
+  receiveTransport = await socketHandler.createWebRtcTransport(
     roomName,
     "recv",
   );
@@ -102,6 +109,9 @@ async function subscribe() {
   }
 
   const consumers = await Promise.all(promises);
+
+  subbed = true;
+
   consumerVideo = consumers.find((consumer) => consumer.kind === "video")!;
   consumerAudio = consumers.find((consumer) => consumer.kind === "audio")!;
 
@@ -117,6 +127,52 @@ async function subscribe() {
     "#remote-video",
   ) as HTMLVideoElement;
   remoteVideo.srcObject = new MediaStream(tracks);
+}
+
+async function subUnsub() {
+  if (!socketHandler.socket?.connected) {
+    alert("Please publish first");
+    return;
+  }
+  if (subbed) {
+    if (consumerVideo) {
+      await socketHandler.closeConsumer(consumerVideo.id);
+    }
+    if (consumerAudio) {
+      await socketHandler.closeConsumer(consumerAudio.id);
+    }
+  } else {
+    const promises = [];
+    if (producerVideo) {
+      promises.push(
+        socketHandler.subscribeTrack(receiveTransport, producerVideo.id),
+      );
+    }
+    if (producerAudio) {
+      promises.push(
+        socketHandler.subscribeTrack(receiveTransport, producerAudio.id),
+      );
+    }
+
+    const consumers = await Promise.all(promises);
+
+    consumerVideo = consumers.find((consumer) => consumer.kind === "video")!;
+    consumerAudio = consumers.find((consumer) => consumer.kind === "audio")!;
+
+    const tracks = [];
+    if (consumerVideo) {
+      tracks.push(consumerVideo.track);
+    }
+    if (consumerAudio) {
+      tracks.push(consumerAudio.track);
+    }
+
+    const remoteVideo = document.querySelector(
+      "#remote-video",
+    ) as HTMLVideoElement;
+    remoteVideo.srcObject = new MediaStream(tracks);
+  }
+  subbed = !subbed;
 }
 
 async function sendData() {

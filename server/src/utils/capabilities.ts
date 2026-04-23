@@ -1,29 +1,29 @@
 import _ from "lodash";
 import * as mediasoup from "mediasoup";
-import {
-  RtpCapabilities,
-  RtpCodecCapability,
-} from "mediasoup/node/lib/types.js";
+import type {
+  RouterRtpCapabilities,
+  RouterRtpCodecCapability,
+} from "mediasoup/types";
 
-export function getFilteredMediasoupRtpCapabilities1(): RtpCodecCapability[] {
+export function getFilteredMediasoupRtpCapabilities1(): RouterRtpCodecCapability[] {
   return (
     mediasoup
       .getSupportedRtpCapabilities()
       // Remove codecs not that interesting for WebRTC with web browsers.
       // This prevents errors in mediasoup due to not enough available PayloadTypes.
       .codecs!.filter(
-        (c: RtpCodecCapability) =>
+        (c: RouterRtpCodecCapability) =>
           !["audio/SILK", "audio/CN", "audio/telephone-event"].includes(
             c.mimeType,
           ),
       )
       // Prevent errors from accidentally including some codecs with same PT.
-      .map((c: RtpCodecCapability) => {
-        delete c.preferredPayloadType;
+      .map((c: RouterRtpCodecCapability) => {
+        c.preferredPayloadType = undefined;
         return c;
       })
       // Add mandatory parameters that mediasoup doesn't include by default.
-      .flatMap((c: RtpCodecCapability) => {
+      .flatMap((c: RouterRtpCodecCapability) => {
         // Notes:
         // * `JSON.parse(JSON.stringify(c))` is to create deep-copies of the object.
         // * `_.defaultsDeep()` recursively assigns default values if missing.
@@ -33,12 +33,12 @@ export function getFilteredMediasoupRtpCapabilities1(): RtpCodecCapability[] {
             if (!("minptime" in (c.parameters ?? {}))) {
               c = _.defaultsDeep(JSON.parse(JSON.stringify(c)), {
                 parameters: { minptime: 10 },
-              }) as RtpCodecCapability;
+              }) as RouterRtpCodecCapability;
             }
             if (!("useinbandfec" in (c.parameters ?? {}))) {
               c = _.defaultsDeep(JSON.parse(JSON.stringify(c)), {
                 parameters: { useinbandfec: 1 },
-              }) as RtpCodecCapability;
+              }) as RouterRtpCodecCapability;
             }
             break;
           case "video/H264":
@@ -50,7 +50,7 @@ export function getFilteredMediasoupRtpCapabilities1(): RtpCodecCapability[] {
                 _.defaultsDeep(JSON.parse(JSON.stringify(c)), {
                   parameters: { "packetization-mode": 1 },
                 }),
-              ] as RtpCodecCapability[];
+              ] as RouterRtpCodecCapability[];
             }
             break;
           case "video/H265":
@@ -62,7 +62,7 @@ export function getFilteredMediasoupRtpCapabilities1(): RtpCodecCapability[] {
                 _.defaultsDeep(JSON.parse(JSON.stringify(c)), {
                   parameters: { "packetization-mode": 1 },
                 }),
-              ] as RtpCodecCapability[];
+              ] as RouterRtpCodecCapability[];
             }
             break;
           case "video/VP9":
@@ -74,7 +74,7 @@ export function getFilteredMediasoupRtpCapabilities1(): RtpCodecCapability[] {
                 _.defaultsDeep(JSON.parse(JSON.stringify(c)), {
                   parameters: { "profile-id": 2 },
                 }),
-              ] as RtpCodecCapability[];
+              ] as RouterRtpCodecCapability[];
             }
             break;
         }
@@ -83,7 +83,7 @@ export function getFilteredMediasoupRtpCapabilities1(): RtpCodecCapability[] {
   );
 }
 
-export function getFilteredMediasoupRtpCapabilities2(): RtpCapabilities {
+export function getFilteredMediasoupRtpCapabilities2(): RouterRtpCapabilities {
   const msRawCaps = mediasoup.getSupportedRtpCapabilities();
 
   const excludeMimeTypes: { [key: string]: boolean } = {
@@ -93,7 +93,7 @@ export function getFilteredMediasoupRtpCapabilities2(): RtpCapabilities {
     "audio/telephone-event": true,
   };
 
-  const msCaps: RtpCapabilities = {
+  const msCaps: RouterRtpCapabilities = {
     codecs: [],
     headerExtensions: msRawCaps.headerExtensions,
   };
@@ -138,9 +138,9 @@ export function getFilteredMediasoupRtpCapabilities2(): RtpCapabilities {
         ];
         for (const packetizationMode of packetizationModes) {
           for (const profileLevelId of profileLevelIds) {
-            const newCodec: RtpCodecCapability = { ...msRawCodec };
-            newCodec.parameters.packetizationMode = packetizationMode;
-            newCodec.parameters.profileLevelId = profileLevelId;
+            const newCodec: RouterRtpCodecCapability = { ...msRawCodec };
+            newCodec.parameters!.packetizationMode = packetizationMode;
+            newCodec.parameters!.profileLevelId = profileLevelId;
             msCaps.codecs!.push(newCodec);
           }
         }
@@ -150,8 +150,8 @@ export function getFilteredMediasoupRtpCapabilities2(): RtpCapabilities {
       case "video/H265":
         const svcPacketizationModes = [0, 1];
         for (const packetizationMode of svcPacketizationModes) {
-          const newSvcCodec: RtpCodecCapability = { ...msRawCodec };
-          newSvcCodec.parameters.packetizationMode = packetizationMode;
+          const newSvcCodec: RouterRtpCodecCapability = { ...msRawCodec };
+          newSvcCodec.parameters!.packetizationMode = packetizationMode;
           msCaps.codecs!.push(newSvcCodec);
         }
         continue;
@@ -159,7 +159,7 @@ export function getFilteredMediasoupRtpCapabilities2(): RtpCapabilities {
       case "video/VP9":
         const profileIds = [0, 2];
         for (const profileId of profileIds) {
-          const newVp9Codec: RtpCodecCapability = { ...msRawCodec };
+          const newVp9Codec: RouterRtpCodecCapability = { ...msRawCodec };
           if (!newVp9Codec.parameters) {
             newVp9Codec.parameters = {};
           }

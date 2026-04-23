@@ -79,6 +79,11 @@ message ConsumeDataResponse {
     string sctp_stream_parameters = 4;
 }
 
+message CloseConsumerRequest {
+    string room_name = 1;
+    string consumer_id = 2;
+}
+
 message Error {
     string message = 1;
     optional int32 code = 2;

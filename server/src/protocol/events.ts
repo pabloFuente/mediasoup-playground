@@ -1,4 +1,5 @@
 import {
+  CloseConsumerRequest,
   ConnectWebrtcTransportRequest,
   ConnectWebrtcTransportResponse,
   ConsumeDataRequest,
@@ -45,6 +46,7 @@ export interface ClientToServerEvents {
     request: ConsumeDataRequest,
     callback: (response: ConsumeDataResponse) => void
   ) => void;
+  closeConsumer: (request: CloseConsumerRequest) => void;
 }
 
 export interface InterServerEvents {

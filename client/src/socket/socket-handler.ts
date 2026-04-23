@@ -1,20 +1,25 @@
 import { create } from "@bufbuild/protobuf";
 import { Device } from "mediasoup-client";
-import { MediaKind, RtpCapabilities } from "mediasoup-client/lib/RtpParameters";
-import {
+import type {
   Consumer,
+  ConsumerOptions,
   DataConsumer,
   DataProducer,
   DtlsParameters,
+  MediaKind,
   Producer,
   ProducerOptions,
+  RtpCapabilities,
+  RtpParameters,
   Transport,
   TransportOptions,
-} from "mediasoup-client/lib/types";
+} from "mediasoup-client/types";
 import { io, Socket } from "socket.io-client";
 
 import { ClientToServerEvents, ServerToClientEvents } from "../protocol/events";
 import {
+  CloseConsumerRequest,
+  CloseConsumerRequestSchema,
   ConnectWebrtcTransportRequestSchema,
   ConnectWebrtcTransportResponse,
   ConsumeDataRequestSchema,
@@ -144,6 +149,34 @@ export class SocketHandler {
       }
       const producerOptions: ProducerOptions = {
         track,
+        // codec: {
+        //   kind: "video",
+        //   mimeType: "video/VP8",
+        //   preferredPayloadType: 96,
+        //   clockRate: 90000,
+        //   rtcpFeedback: [
+        //     {
+        //       type: "nack",
+        //       parameter: "",
+        //     },
+        //     {
+        //       type: "nack",
+        //       parameter: "pli",
+        //     },
+        //     {
+        //       type: "ccm",
+        //       parameter: "fir",
+        //     },
+        //     {
+        //       type: "goog-remb",
+        //       parameter: "",
+        //     },
+        //     {
+        //       type: "transport-cc",
+        //       parameter: "",
+        //     },
+        //   ],
+        // },
       };
       if (simulcast && track.kind === "video") {
         producerOptions.encodings = [
@@ -179,12 +212,19 @@ export class SocketHandler {
             reject(response.error);
             return;
           }
-          const consumer: Consumer = await receiveTransport.consume({
+
+          const rtpParameters: RtpParameters = JSON.parse(
+            response.rtpParameters,
+          );
+          const consumerOptions: ConsumerOptions = {
             id: response.id,
             producerId: response.producerId,
             kind: response.kind as "audio" | "video",
-            rtpParameters: JSON.parse(response.rtpParameters),
-          });
+            rtpParameters: rtpParameters,
+          };
+
+          const consumer: Consumer =
+            await receiveTransport.consume(consumerOptions);
           console.log("Consumer created with id: ", consumer.id);
           this.consumers.set(consumer.id, consumer);
           const req: ResumeConsumerRequest = create(
@@ -247,6 +287,19 @@ export class SocketHandler {
       } catch (error: any) {
         reject(error);
       }
+    });
+  }
+
+  closeConsumer(consumerId: string): Promise<void> {
+    return new Promise((resolve) => {
+      const request: CloseConsumerRequest = create(CloseConsumerRequestSchema, {
+        roomName: this.roomName!,
+        consumerId,
+      });
+      this.socket!.emit("closeConsumer", request);
+      this.consumers.get(consumerId)!.close();
+      this.consumers.delete(consumerId);
+      resolve();
     });
   }
 

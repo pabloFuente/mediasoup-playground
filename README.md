@@ -2,9 +2,9 @@
 
 This Node application is prodution ready. It comes with the necessary dependencies and their specific configurations.
 
-- **Node v20.15.1**
-- **NPM 10.8.2**
-- **TypeScript 5**: for safe typings in both client and server code.
+- **Node v24+**
+- **NPM 11+**
+- **TypeScript 6**: for safe typings in both client and server code.
 - **ES module application**
 - **Protobuf**: to define client-server communication and auto generate shared types.
 - **Vite**: to build and bundle the client application.

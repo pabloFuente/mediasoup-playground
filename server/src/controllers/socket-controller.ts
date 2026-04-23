@@ -1,11 +1,11 @@
 import { create } from "@bufbuild/protobuf";
-import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters.js";
-import { SctpStreamParameters } from "mediasoup/node/lib/types.js";
+import type { RtpCapabilities, SctpStreamParameters } from "mediasoup/types";
 import * as SocketIO from "socket.io";
 
 import { Logger } from "../library/logging.js";
 import { Room } from "../models/room.js";
 import {
+  CloseConsumerRequest,
   ConnectWebrtcTransportRequest,
   ConnectWebrtcTransportResponse,
   ConnectWebrtcTransportResponseSchema,
@@ -35,6 +35,7 @@ export class SocketController {
   constructor(socketServer: SocketIO.Server) {
     this.socketServer = socketServer;
     this.roomService = new RoomService();
+
     socketServer.on("connection", (socket) => {
       Logger.info("A user connected!");
 
@@ -288,6 +289,24 @@ export class SocketController {
           }
         },
       );
+
+      socket.on("closeConsumer", async (request: CloseConsumerRequest) => {
+        Logger.info("closeConsumer request");
+        try {
+          const room = await this.roomService.getRoom(request.roomName);
+          const consumer = room.consumers.get(request.consumerId);
+          if (!consumer) {
+            Logger.error("closeConsumer error: Consumer not found");
+            return;
+          }
+
+          await consumer.close();
+          Logger.info("closeConsumer success");
+
+        } catch (err: any) {
+          Logger.error("closeConsumer error: ", err);
+        }
+      });
     });
   }
 }

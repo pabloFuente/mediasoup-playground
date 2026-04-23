@@ -1,7 +1,9 @@
 import fs from "fs";
 import mediasoup from "mediasoup";
 import { getRawAsset, isSea } from "node:sea";
+import { networkInterfaces } from "os";
 
+import { CONFIG } from "../config/config.js";
 import { Logger } from "../library/logging.js";
 
 export function handleBinary() {
@@ -50,4 +52,43 @@ function getRunningBinaryPath() {
     runningBinaryPath.lastIndexOf("/"),
   );
   return runningBinaryPath;
+}
+
+export function validateAnnouncedIp(): void {
+  const announcedIp = CONFIG.ANNOUNCED_IP;
+
+  if (announcedIp === "127.0.0.1") {
+    Logger.warn(
+      "MEDIASOUP_ANNOUNCED_IP=127.0.0.1 — only same-machine clients can connect",
+    );
+    return;
+  }
+
+  const localIps = new Set<string>();
+  const ifaces = networkInterfaces();
+  for (const addrs of Object.values(ifaces)) {
+    if (!addrs) continue;
+    for (const addr of addrs) {
+      if (addr.family === "IPv4") {
+        localIps.add(addr.address);
+      }
+    }
+  }
+
+  if (localIps.has(announcedIp)) {
+    Logger.info(
+      `MEDIASOUP_ANNOUNCED_IP=${announcedIp} matches a local interface — OK for LAN clients`,
+    );
+    return;
+  }
+
+  const localList = [...localIps]
+    .filter((ip) => ip !== "127.0.0.1")
+    .join(", ");
+  Logger.error(
+    `MEDIASOUP_ANNOUNCED_IP=${announcedIp} does not match any local interface. ` +
+      `Clients will fail to connect via ICE! ` +
+      `Local interfaces: ${localList}`,
+  );
+  process.exit(1);
 }

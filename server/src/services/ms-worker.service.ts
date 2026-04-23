@@ -1,6 +1,6 @@
 import os from "os";
 import mediasoup from "mediasoup";
-import { Worker, WorkerSettings } from "mediasoup/node/lib/types.js";
+import type { Worker, WorkerSettings } from "mediasoup/types";
 import semver from "semver";
 
 import { CONFIG } from "../config/config.js";

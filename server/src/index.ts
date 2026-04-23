@@ -13,9 +13,10 @@ import {
   ServerToClientEvents,
   SocketData,
 } from "./protocol/events.js";
-import { handleBinary } from "./utils/startup.js";
+import { handleBinary, validateAnnouncedIp } from "./utils/startup.js";
 
 handleBinary();
+validateAnnouncedIp();
 
 const app: Express = express();
 let server;

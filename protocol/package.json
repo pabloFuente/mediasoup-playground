@@ -5,11 +5,11 @@
     "copy": "rm -rf ../server/src/protocol/ && cp -a ./protocol ../server/src/. && rm -rf ../client/src/protocol/ && cp -a ./protocol ../client/src/."
   },
   "devDependencies": {
-    "@bufbuild/buf": "1.46.0",
-    "@bufbuild/protobuf": "2.2.2",
-    "@bufbuild/protoc-gen-es": "2.2.2",
+    "@bufbuild/buf": "1.68.4",
+    "@bufbuild/protobuf": "2.11.0",
+    "@bufbuild/protoc-gen-es": "2.11.0",
     "cjs-to-es6": "2.0.1",
-    "fix-esm-import-path": "1.10.1",
-    "ts-proto": "2.2.5"
+    "fix-esm-import-path": "1.10.3",
+    "ts-proto": "2.11.6"
   }
 }

@@ -1,16 +1,16 @@
-import {
+import type {
   Consumer,
   DataConsumer,
   DataProducer,
   Producer,
   Router,
+  RouterRtpCodecCapability,
   RtpCapabilities,
-  RtpCodecCapability,
   RtpParameters,
   SctpStreamParameters,
   WebRtcTransport,
   Worker,
-} from "mediasoup/node/lib/types.js";
+} from "mediasoup/types";
 import semver from "semver";
 
 import { CONFIG } from "../config/config.js";
@@ -34,7 +34,7 @@ export class Room {
 
   async initRouter(): Promise<RtpCapabilities> {
     if (!this.router) {
-      const codecs: RtpCodecCapability[] =
+      const codecs: RouterRtpCodecCapability[] =
         getFilteredMediasoupRtpCapabilities1();
       this.router = await this.worker.createRouter({
         mediaCodecs: codecs,
