@@ -16,37 +16,40 @@ import {
 import { handleBinary, validateAnnouncedIp } from "./utils/startup.js";
 
 handleBinary();
-await validateAnnouncedIp();
 
-const app: Express = express();
-let server;
-if (CONFIG.IS_HTTPS) {
-  server = https.createServer(
-    {
-      cert: fs.readFileSync(CONFIG.CERT_PEM),
-      key: fs.readFileSync(CONFIG.KEY_PEM),
+(async () => {
+  await validateAnnouncedIp();
+
+  const app: Express = express();
+  let server;
+  if (CONFIG.IS_HTTPS) {
+    server = https.createServer(
+      {
+        cert: fs.readFileSync(CONFIG.CERT_PEM),
+        key: fs.readFileSync(CONFIG.KEY_PEM),
+      },
+      app,
+    );
+  } else {
+    server = http.createServer(app);
+  }
+
+  server.listen(CONFIG.PORT as number, () => {
+    Logger.info(
+      `mediasoup-server running at ${CONFIG.IS_HTTPS ? "https" : "http"}://${CONFIG.ANNOUNCED_IP}:${CONFIG.PORT}`,
+    );
+  });
+
+  const io = new SocketIO.Server<
+    ClientToServerEvents,
+    ServerToClientEvents,
+    InterServerEvents,
+    SocketData
+  >(server, {
+    cors: {
+      origin: "*",
     },
-    app,
-  );
-} else {
-  server = http.createServer(app);
-}
+  });
 
-server.listen(CONFIG.PORT as number, () => {
-  Logger.info(
-    `mediasoup-server running at ${CONFIG.IS_HTTPS ? "https" : "http"}://${CONFIG.ANNOUNCED_IP}:${CONFIG.PORT}`,
-  );
-});
-
-const io = new SocketIO.Server<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  InterServerEvents,
-  SocketData
->(server, {
-  cors: {
-    origin: "*",
-  },
-});
-
-new SocketController(io);
+  new SocketController(io);
+})();
