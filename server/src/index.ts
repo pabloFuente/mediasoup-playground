@@ -16,7 +16,7 @@ import {
 import { handleBinary, validateAnnouncedIp } from "./utils/startup.js";
 
 handleBinary();
-validateAnnouncedIp();
+await validateAnnouncedIp();
 
 const app: Express = express();
 let server;

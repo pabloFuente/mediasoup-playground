@@ -1,7 +1,7 @@
 import fs from "fs";
+import { networkInterfaces } from "os";
 import mediasoup from "mediasoup";
 import { getRawAsset, isSea } from "node:sea";
-import { networkInterfaces } from "os";
 
 import { CONFIG } from "../config/config.js";
 import { Logger } from "../library/logging.js";
@@ -54,7 +54,7 @@ function getRunningBinaryPath() {
   return runningBinaryPath;
 }
 
-export function validateAnnouncedIp(): void {
+export async function validateAnnouncedIp(): Promise<void> {
   const announcedIp = CONFIG.ANNOUNCED_IP;
 
   if (announcedIp === "127.0.0.1") {
@@ -82,13 +82,63 @@ export function validateAnnouncedIp(): void {
     return;
   }
 
-  const localList = [...localIps]
-    .filter((ip) => ip !== "127.0.0.1")
-    .join(", ");
-  Logger.error(
-    `MEDIASOUP_ANNOUNCED_IP=${announcedIp} does not match any local interface. ` +
-      `Clients will fail to connect via ICE! ` +
-      `Local interfaces: ${localList}`,
+  const localList = [...localIps].filter((ip) => ip !== "127.0.0.1").join(", ");
+
+  // RFC 1918 / RFC 6598 private ranges
+  const isPrivate =
+    /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.)/.test(
+      announcedIp,
+    );
+
+  if (isPrivate) {
+    Logger.error(
+      `MEDIASOUP_ANNOUNCED_IP=${announcedIp} is a private IP that does not match any local interface. ` +
+        `Clients will fail to connect via ICE! ` +
+        `Local interfaces: ${localList}`,
+    );
+    process.exit(1);
+  }
+
+  Logger.info(
+    `MEDIASOUP_ANNOUNCED_IP=${announcedIp} is a public IP (not on any local interface) — verifying against actual public IP...`,
   );
-  process.exit(1);
+
+  const publicIp = await detectPublicIp();
+  if (!publicIp) {
+    Logger.warn(
+      `Could not detect public IP to verify MEDIASOUP_ANNOUNCED_IP=${announcedIp}. Proceeding anyway`,
+    );
+  } else if (publicIp === announcedIp) {
+    Logger.info(
+      `MEDIASOUP_ANNOUNCED_IP=${announcedIp} matches detected public IP — OK for internet clients`,
+    );
+  } else {
+    Logger.error(
+      `MEDIASOUP_ANNOUNCED_IP=${announcedIp} does not match detected public IP (${publicIp}). ` +
+        `Clients will fail to connect via ICE!`,
+    );
+    process.exit(1);
+  }
+}
+
+async function detectPublicIp(): Promise<string | null> {
+  const services = [
+    "https://api4.ipify.org",
+    "https://ipv4.icanhazip.com",
+    "https://ipv4.ifconfig.me/ip",
+  ];
+  for (const url of services) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        const ip = (await res.text()).trim();
+        if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) {
+          return ip;
+        }
+      }
+    } catch {
+      // try next service
+    }
+  }
+  return null;
 }
