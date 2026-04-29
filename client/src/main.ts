@@ -37,16 +37,16 @@ let receiveTransport: Transport;
 async function publish() {
   const roomName: string = (document.getElementById("room") as HTMLInputElement)
     .value;
-  await socketHandler.connectSocket("https://localhost:3000");
+  await socketHandler.connectSocket("https://193.147.51.67:7881");
   const sendTransport = await socketHandler.createWebRtcTransport(
     roomName,
     "send",
   );
+  const screenshare = (
+    document.getElementById("screenshare") as HTMLInputElement
+  ).checked;
   let mediaStream: MediaStream;
   try {
-    const screenshare = (
-      document.getElementById("screenshare") as HTMLInputElement
-    ).checked;
     if (screenshare) {
       mediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
@@ -73,7 +73,7 @@ async function publish() {
   const promises = [];
   if (videoTrack) {
     promises.push(
-      socketHandler.publishTrack(sendTransport, videoTrack, simulcast),
+      socketHandler.publishTrack(sendTransport, videoTrack, simulcast, screenshare),
     );
   }
   if (audioTrack) {

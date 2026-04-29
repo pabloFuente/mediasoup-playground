@@ -10,6 +10,8 @@ const KEY_PEM = process.env.KEY_PEM || "key.pem";
 const RTC_MIN_PORT = process.env.MEDIASOUP_RTC_MIN_PORT || 40000;
 const RTC_MAX_PORT = process.env.MEDIASOUP_RTC_MAX_PORT || 65535;
 const ANNOUNCED_IP = process.env.MEDIASOUP_ANNOUNCED_IP || "127.0.0.1";
+const MEDIASOUP_LOG_LEVEL = process.env.MEDIASOUP_LOG_LEVEL || "error";
+const MEDIASOUP_LOG_TAGS = (process.env.MEDIASOUP_LOG_TAGS || "info,ice,rtp,rtcp,message").split(",").map((t) => t.trim());
 
 export const CONFIG = {
   IS_HTTPS,
@@ -19,4 +21,6 @@ export const CONFIG = {
   RTC_MIN_PORT,
   RTC_MAX_PORT,
   ANNOUNCED_IP,
+  MEDIASOUP_LOG_LEVEL,
+  MEDIASOUP_LOG_TAGS,
 };

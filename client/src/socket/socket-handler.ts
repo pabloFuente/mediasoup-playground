@@ -141,6 +141,7 @@ export class SocketHandler {
     sendTransport: Transport,
     track: MediaStreamTrack,
     simulcast: boolean = false,
+    screenshare: boolean = false,
   ): Promise<Producer> {
     return new Promise(async (resolve, reject) => {
       if (!this.device?.canProduce(track.kind as MediaKind)) {
@@ -179,11 +180,21 @@ export class SocketHandler {
         // },
       };
       if (simulcast && track.kind === "video") {
-        producerOptions.encodings = [
-          { rid: "r0", scalabilityMode: "L1T3" },
-          { rid: "r1", scalabilityMode: "L1T3" },
-          { rid: "r2", scalabilityMode: "L1T3" },
-        ];
+        if (screenshare) {
+          // Match livekit-playground screen share simulcast layers:
+          // ScreenSharePresets.h360fps15, h720fps30, screenShareEncoding(10Mbps)
+          producerOptions.encodings = [
+            { rid: "r0", scaleResolutionDownBy: 3, maxBitrate: 400_000, maxFramerate: 15, scalabilityMode: "L1T3" },
+            { rid: "r1", scaleResolutionDownBy: 1.5, maxBitrate: 2_000_000, maxFramerate: 30, scalabilityMode: "L1T3" },
+            { rid: "r2", scaleResolutionDownBy: 1, maxBitrate: 10_000_000, scalabilityMode: "L1T3" },
+          ];
+        } else {
+          producerOptions.encodings = [
+            { rid: "r0", scalabilityMode: "L1T3" },
+            { rid: "r1", scalabilityMode: "L1T3" },
+            { rid: "r2", scalabilityMode: "L1T3" },
+          ];
+        }
       }
       const producer = await sendTransport.produce(producerOptions);
       console.log("Producer created with id: ", producer.id);

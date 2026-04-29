@@ -1,6 +1,6 @@
 import os from "os";
 import mediasoup from "mediasoup";
-import type { Worker, WorkerSettings } from "mediasoup/types";
+import type { Worker, WorkerLogLevel, WorkerLogTag, WorkerSettings } from "mediasoup/types";
 import semver from "semver";
 
 import { CONFIG } from "../config/config.js";
@@ -16,7 +16,10 @@ export class MsWorkerService {
 
   async getNewWorkerOrLessLoaded() {
     if (this.workers.length < this.MAX_WORKERS) {
-      const options: WorkerSettings = {};
+      const options: WorkerSettings = {
+        logLevel: CONFIG.MEDIASOUP_LOG_LEVEL as WorkerLogLevel,
+        logTags: CONFIG.MEDIASOUP_LOG_TAGS as WorkerLogTag[],
+      };
       if (semver.lt(this.getMediasoupVersion(), "3.13.0")) {
         options.rtcMinPort = Number(CONFIG.RTC_MIN_PORT);
         options.rtcMaxPort = Number(CONFIG.RTC_MAX_PORT);
