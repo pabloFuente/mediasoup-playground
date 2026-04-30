@@ -39,6 +39,70 @@ import {
   ResumeConsumerRequestSchema,
 } from "../protocol/mediasoup_playground_pb";
 
+const debugPrefix = "### [OPENVIDU][mediasoup-playground]";
+
+let peerConnectionSdpDebugInstalled = false;
+
+function debugJson(label: string, value: unknown) {
+  console.log(`${debugPrefix} ${label}:\n${JSON.stringify(value, null, 2)}`);
+}
+
+function debugSdp(label: string, description?: RTCSessionDescription | null) {
+  if (!description?.sdp) {
+    console.log(`${debugPrefix} ${label} SDP: <empty>`);
+    return;
+  }
+
+  console.log(
+    `${debugPrefix} ${label} SDP {type: ${description.type}, bytes: ${description.sdp.length}}`,
+  );
+  console.log(
+    `${debugPrefix} ${label} SDP body begin\n${description.sdp}\n${debugPrefix} ${label} SDP body end`,
+  );
+}
+
+function installPeerConnectionSdpDebugLogging() {
+  if (peerConnectionSdpDebugInstalled || !window.RTCPeerConnection) {
+    return;
+  }
+
+  peerConnectionSdpDebugInstalled = true;
+
+  const peerConnectionPrototype = window.RTCPeerConnection.prototype as any;
+  const originalCreateOffer = peerConnectionPrototype.createOffer;
+  const originalCreateAnswer = peerConnectionPrototype.createAnswer;
+  const originalSetLocalDescription =
+    peerConnectionPrototype.setLocalDescription;
+  const originalSetRemoteDescription =
+    peerConnectionPrototype.setRemoteDescription;
+
+  peerConnectionPrototype.createOffer = async function (...args: any[]) {
+    const offer = await originalCreateOffer.apply(this, args);
+    debugSdp("RTCPeerConnection.createOffer", offer);
+    return offer;
+  };
+
+  peerConnectionPrototype.createAnswer = async function (...args: any[]) {
+    const answer = await originalCreateAnswer.apply(this, args);
+    debugSdp("RTCPeerConnection.createAnswer", answer);
+    return answer;
+  };
+
+  peerConnectionPrototype.setLocalDescription = async function (
+    ...args: any[]
+  ) {
+    await originalSetLocalDescription.apply(this, args);
+    debugSdp("RTCPeerConnection.setLocalDescription", this.localDescription);
+  };
+
+  peerConnectionPrototype.setRemoteDescription = async function (
+    ...args: any[]
+  ) {
+    await originalSetRemoteDescription.apply(this, args);
+    debugSdp("RTCPeerConnection.setRemoteDescription", this.remoteDescription);
+  };
+}
+
 export class SocketHandler {
   socket?: Socket<ServerToClientEvents, ClientToServerEvents>;
   roomName?: string;
@@ -120,6 +184,9 @@ export class SocketHandler {
           const transportOptions: TransportOptions = JSON.parse(
             response.transportOptions,
           );
+          installPeerConnectionSdpDebugLogging();
+          debugJson("server routerRtpCapabilities", routerRtpCapabilities);
+          debugJson("server transportOptions", transportOptions);
           this.device = await this.createDevice(routerRtpCapabilities);
           if (direction === "send") {
             const sendTransport =
@@ -183,10 +250,15 @@ export class SocketHandler {
         if (screenshare) {
           // Match livekit-playground screen share simulcast layers:
           // ScreenSharePresets.h360fps15, h720fps30, screenShareEncoding(10Mbps)
+          // producerOptions.encodings = [
+          //   { rid: "r0", scaleResolutionDownBy: 3, maxBitrate: 400_000, maxFramerate: 15, scalabilityMode: "L1T3" },
+          //   { rid: "r1", scaleResolutionDownBy: 1.5, maxBitrate: 2_000_000, maxFramerate: 30, scalabilityMode: "L1T3" },
+          //   { rid: "r2", scaleResolutionDownBy: 1, maxBitrate: 10_000_000, scalabilityMode: "L1T3" },
+          // ];
           producerOptions.encodings = [
-            { rid: "r0", scaleResolutionDownBy: 3, maxBitrate: 400_000, maxFramerate: 15, scalabilityMode: "L1T3" },
-            { rid: "r1", scaleResolutionDownBy: 1.5, maxBitrate: 2_000_000, maxFramerate: 30, scalabilityMode: "L1T3" },
-            { rid: "r2", scaleResolutionDownBy: 1, maxBitrate: 10_000_000, scalabilityMode: "L1T3" },
+            { rid: "r0", scalabilityMode: "L1T3" },
+            { rid: "r1", scalabilityMode: "L1T3" },
+            { rid: "r2", scalabilityMode: "L1T3" },
           ];
         } else {
           producerOptions.encodings = [
@@ -196,8 +268,13 @@ export class SocketHandler {
           ];
         }
       }
+      debugJson("producer options before produce", producerOptions);
       const producer = await sendTransport.produce(producerOptions);
       console.log("Producer created with id: ", producer.id);
+      debugJson(
+        "producer RTP parameters after produce",
+        producer.rtpParameters,
+      );
       this.producers.set(producer.id, producer);
       resolve(producer);
     });
@@ -234,9 +311,16 @@ export class SocketHandler {
             rtpParameters: rtpParameters,
           };
 
+          console.log("consumer options: ", consumerOptions);
+          debugJson("consumer options before consume", consumerOptions);
+
           const consumer: Consumer =
             await receiveTransport.consume(consumerOptions);
           console.log("Consumer created with id: ", consumer.id);
+          debugJson(
+            "consumer RTP parameters after consume",
+            consumer.rtpParameters,
+          );
           this.consumers.set(consumer.id, consumer);
           const req: ResumeConsumerRequest = create(
             ResumeConsumerRequestSchema,
@@ -372,6 +456,7 @@ export class SocketHandler {
 
     await device.load({ routerRtpCapabilities });
     console.log("Device loaded");
+    debugJson("device RTP capabilities after load", device.rtpCapabilities);
     return device;
   }
 
@@ -399,6 +484,10 @@ export class SocketHandler {
       async ({ kind, rtpParameters }, callback, errback) => {
         try {
           console.log("sendTransport 'produce' event");
+          debugJson(
+            "sendTransport produce event RTP parameters",
+            rtpParameters,
+          );
           const request = create(ProduceRequestSchema, {
             roomName: this.roomName!,
             transportId: sendTransport.id,

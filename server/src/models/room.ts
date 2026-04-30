@@ -17,6 +17,12 @@ import { CONFIG } from "../config/config.js";
 import { Logger } from "../library/logging.js";
 import { getFilteredMediasoupRtpCapabilities1 } from "../utils/capabilities.js";
 
+const debugPrefix = "### [OPENVIDU][mediasoup-playground-server]";
+
+function debugJson(label: string, value: unknown) {
+  Logger.info(`${debugPrefix} ${label}:\n${JSON.stringify(value, null, 2)}`);
+}
+
 export class Room {
   name: string;
   mediasoupVersion: string;
@@ -40,6 +46,7 @@ export class Room {
         mediaCodecs: codecs,
       });
       Logger.info(`Router ${this.router.id} created for room ${this.name}`);
+      debugJson("router RTP capabilities", this.router.rtpCapabilities);
     }
     return this.router.rtpCapabilities;
   }
@@ -81,6 +88,12 @@ export class Room {
       `WebRtcTransport ${webRtcTransport.id} created for Router ${this.router?.id} of room ${this.name}`,
     );
     this.webRtcTransports.set(webRtcTransport.id, webRtcTransport);
+    debugJson("WebRtcTransport options", webRtcTransportOptions);
+    debugJson("WebRtcTransport ICE parameters", webRtcTransport.iceParameters);
+    debugJson(
+      "WebRtcTransport DTLS parameters",
+      webRtcTransport.dtlsParameters,
+    );
     return {
       id: webRtcTransport.id,
       iceParameters: webRtcTransport.iceParameters,
@@ -101,11 +114,17 @@ export class Room {
         "WebRtcTransport " + transportId + "not found for room " + this.name,
       );
     }
+    debugJson("transport.produce input RTP parameters", rtpParameters);
     const producer = await transport.produce({
       kind,
       rtpParameters,
     });
     this.producers.set(producer.id, producer);
+    debugJson("Producer RTP parameters after produce", producer.rtpParameters);
+    debugJson(
+      "Producer consumable RTP parameters after produce",
+      producer.consumableRtpParameters,
+    );
     return producer;
   }
 
@@ -120,12 +139,14 @@ export class Room {
         "WebRtcTransport " + transportId + "not found for room " + this.name,
       );
     }
+    debugJson("transport.consume input RTP capabilities", rtpCapabilities);
     const consumer = await transport.consume({
       producerId,
       rtpCapabilities,
       paused: true,
     });
     this.consumers.set(consumer.id, consumer);
+    debugJson("Consumer RTP parameters after consume", consumer.rtpParameters);
     return consumer;
   }
 

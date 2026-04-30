@@ -29,7 +29,7 @@
     "dotenv": "17.4.2",
     "express": "5.2.1",
     "lodash": "4.18.1",
-    "mediasoup": "3.19.21",
+    "mediasoup": "^3.19.19",
     "semver": "^7.7.4",
     "socket.io": "4.8.3",
     "winston": "3.19.0"
