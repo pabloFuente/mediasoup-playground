@@ -10,6 +10,7 @@ import type {
   Producer,
   ProducerOptions,
   RtpCapabilities,
+  RtpEncodingParameters,
   RtpParameters,
   Transport,
   TransportOptions,
@@ -101,6 +102,204 @@ function installPeerConnectionSdpDebugLogging() {
     await originalSetRemoteDescription.apply(this, args);
     debugSdp("RTCPeerConnection.setRemoteDescription", this.remoteDescription);
   };
+}
+
+type LiveKitVideoPreset = {
+  width: number;
+  height: number;
+  maxBitrate: number;
+  maxFramerate?: number;
+  priority?: "very-low" | "low" | "medium" | "high";
+};
+
+const liveKitRids = ["q", "h", "f"];
+
+const liveKitVideoPresets169: LiveKitVideoPreset[] = [
+  { width: 160, height: 90, maxBitrate: 90_000, maxFramerate: 20 },
+  { width: 320, height: 180, maxBitrate: 160_000, maxFramerate: 20 },
+  { width: 384, height: 216, maxBitrate: 180_000, maxFramerate: 20 },
+  { width: 640, height: 360, maxBitrate: 450_000, maxFramerate: 20 },
+  { width: 960, height: 540, maxBitrate: 800_000, maxFramerate: 25 },
+  { width: 1280, height: 720, maxBitrate: 1_700_000, maxFramerate: 30 },
+  { width: 1920, height: 1080, maxBitrate: 3_000_000, maxFramerate: 30 },
+  { width: 2560, height: 1440, maxBitrate: 5_000_000, maxFramerate: 30 },
+  { width: 3840, height: 2160, maxBitrate: 8_000_000, maxFramerate: 30 },
+];
+
+const liveKitVideoPresets43: LiveKitVideoPreset[] = [
+  { width: 160, height: 120, maxBitrate: 70_000, maxFramerate: 20 },
+  { width: 240, height: 180, maxBitrate: 125_000, maxFramerate: 20 },
+  { width: 320, height: 240, maxBitrate: 140_000, maxFramerate: 20 },
+  { width: 480, height: 360, maxBitrate: 330_000, maxFramerate: 20 },
+  { width: 640, height: 480, maxBitrate: 500_000, maxFramerate: 20 },
+  { width: 720, height: 540, maxBitrate: 600_000, maxFramerate: 25 },
+  { width: 960, height: 720, maxBitrate: 1_300_000, maxFramerate: 30 },
+  { width: 1440, height: 1080, maxBitrate: 2_300_000, maxFramerate: 30 },
+  { width: 1920, height: 1440, maxBitrate: 3_800_000, maxFramerate: 30 },
+];
+
+const liveKitDefaultSimulcastPresets169 = [
+  liveKitVideoPresets169[1],
+  liveKitVideoPresets169[3],
+];
+
+const liveKitDefaultSimulcastPresets43 = [
+  liveKitVideoPresets43[1],
+  liveKitVideoPresets43[3],
+];
+
+const liveKitDefaultScreenShareEncoding: LiveKitVideoPreset = {
+  width: 1920,
+  height: 1080,
+  maxBitrate: 2_500_000,
+  maxFramerate: 15,
+  priority: "medium",
+};
+
+function getTrackDimensions(track: MediaStreamTrack) {
+  const settings = track.getSettings();
+
+  return {
+    width: settings.width ?? 1280,
+    height: settings.height ?? 720,
+  };
+}
+
+function isAspectRatio169(width: number, height: number) {
+  const aspect = width > height ? width / height : height / width;
+
+  return Math.abs(aspect - 16 / 9) < Math.abs(aspect - 4 / 3);
+}
+
+function determineLiveKitDefaultCameraEncoding(
+  width: number,
+  height: number,
+): LiveKitVideoPreset {
+  const presets = isAspectRatio169(width, height)
+    ? liveKitVideoPresets169
+    : liveKitVideoPresets43;
+  const size = Math.max(width, height);
+
+  return (
+    presets.find((preset) => preset.width >= size) ??
+    presets[presets.length - 1]
+  );
+}
+
+function createLiveKitDefaultScreenShareSimulcastPresets(
+  original: LiveKitVideoPreset,
+): LiveKitVideoPreset[] {
+  const scaleResolutionDownBy = 2;
+  const maxFramerate = original.maxFramerate;
+
+  return [
+    {
+      width: Math.floor(original.width / scaleResolutionDownBy),
+      height: Math.floor(original.height / scaleResolutionDownBy),
+      maxBitrate: Math.max(
+        150_000,
+        Math.floor(
+          original.maxBitrate /
+            (scaleResolutionDownBy ** 2 *
+              ((original.maxFramerate ?? 30) / (maxFramerate ?? 30))),
+        ),
+      ),
+      maxFramerate,
+      priority: original.priority,
+    },
+  ];
+}
+
+function liveKitDefaultSimulcastPresets(
+  screenshare: boolean,
+  original: LiveKitVideoPreset,
+) {
+  if (screenshare) {
+    return createLiveKitDefaultScreenShareSimulcastPresets(original);
+  }
+
+  return isAspectRatio169(original.width, original.height)
+    ? liveKitDefaultSimulcastPresets169
+    : liveKitDefaultSimulcastPresets43;
+}
+
+function liveKitEncodingsFromPresets(
+  width: number,
+  height: number,
+  presets: LiveKitVideoPreset[],
+  sourceFramerate?: number,
+): RtpEncodingParameters[] {
+  return presets.slice(0, liveKitRids.length).map((preset, index) => {
+    const size = Math.min(width, height);
+    const minPresetSize = Math.min(preset.width, preset.height);
+    const maxFramerate =
+      sourceFramerate && preset.maxFramerate
+        ? Math.min(sourceFramerate, preset.maxFramerate)
+        : preset.maxFramerate;
+    const encoding: RtpEncodingParameters = {
+      rid: liveKitRids[index],
+      scaleResolutionDownBy: Math.max(1, size / minPresetSize),
+      maxBitrate: preset.maxBitrate,
+    };
+
+    if (maxFramerate) {
+      encoding.maxFramerate = maxFramerate;
+    }
+    if (preset.priority && index === 0) {
+      encoding.priority = preset.priority;
+      encoding.networkPriority = preset.priority;
+    }
+
+    return encoding;
+  });
+}
+
+function computeLiveKitDefaultVideoEncodings(
+  track: MediaStreamTrack,
+  screenshare: boolean,
+): RtpEncodingParameters[] {
+  const { width, height } = getTrackDimensions(track);
+  const videoEncoding = screenshare
+    ? liveKitDefaultScreenShareEncoding
+    : determineLiveKitDefaultCameraEncoding(width, height);
+  const sourceFramerate = videoEncoding.maxFramerate;
+  const original: LiveKitVideoPreset = {
+    width,
+    height,
+    maxBitrate: videoEncoding.maxBitrate,
+    maxFramerate: videoEncoding.maxFramerate,
+    priority: videoEncoding.priority,
+  };
+  const presets = liveKitDefaultSimulcastPresets(screenshare, original);
+  const lowPreset = presets[0];
+  const midPreset = presets[1];
+  const size = Math.max(width, height);
+
+  if (lowPreset) {
+    if (size >= 960 && midPreset) {
+      return liveKitEncodingsFromPresets(
+        width,
+        height,
+        [lowPreset, midPreset, original],
+        sourceFramerate,
+      );
+    }
+    if (size >= 480) {
+      return liveKitEncodingsFromPresets(
+        width,
+        height,
+        [lowPreset, original],
+        sourceFramerate,
+      );
+    }
+  }
+
+  return liveKitEncodingsFromPresets(
+    width,
+    height,
+    [original],
+    sourceFramerate,
+  );
 }
 
 export class SocketHandler {
@@ -247,26 +446,10 @@ export class SocketHandler {
         // },
       };
       if (simulcast && track.kind === "video") {
-        if (screenshare) {
-          // Match livekit-playground screen share simulcast layers:
-          // ScreenSharePresets.h360fps15, h720fps30, screenShareEncoding(10Mbps)
-          // producerOptions.encodings = [
-          //   { rid: "r0", scaleResolutionDownBy: 3, maxBitrate: 400_000, maxFramerate: 15, scalabilityMode: "L1T3" },
-          //   { rid: "r1", scaleResolutionDownBy: 1.5, maxBitrate: 2_000_000, maxFramerate: 30, scalabilityMode: "L1T3" },
-          //   { rid: "r2", scaleResolutionDownBy: 1, maxBitrate: 10_000_000, scalabilityMode: "L1T3" },
-          // ];
-          producerOptions.encodings = [
-            { rid: "r0", scalabilityMode: "L1T3" },
-            { rid: "r1", scalabilityMode: "L1T3" },
-            { rid: "r2", scalabilityMode: "L1T3" },
-          ];
-        } else {
-          producerOptions.encodings = [
-            { rid: "r0", scalabilityMode: "L1T3" },
-            { rid: "r1", scalabilityMode: "L1T3" },
-            { rid: "r2", scalabilityMode: "L1T3" },
-          ];
-        }
+        producerOptions.encodings = computeLiveKitDefaultVideoEncodings(
+          track,
+          screenshare,
+        );
       }
       debugJson("producer options before produce", producerOptions);
       const producer = await sendTransport.produce(producerOptions);
